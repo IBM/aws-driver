@@ -1,0 +1,9 @@
+---
+application:
+  port: 7276
+  ssl:
+    enabled: True
+    cert_dir: /var/awsdriver/certs
+
+messaging:
+  connection_address: kafka:9092

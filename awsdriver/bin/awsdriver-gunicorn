@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [[ $( tr '[:upper:]' '[:lower:]' <<<$SSL_ENABLED ) == "true" ]]; then
+    SSL="--certfile /var/awsdriver/certs/tls.crt --keyfile /var/awsdriver/certs/tls.key"
+fi
+
+gunicorn -w $NUM_PROCESSES -b :$DRIVER_PORT $SSL --timeout 1800 --graceful-timeout 1800 "awsdriver:create_wsgi_app()"

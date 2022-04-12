@@ -1,0 +1,4 @@
+include awsdriver/pkg_info.json
+include awsdriver/config/*.yml
+include awsdriver/config/*.yaml
+include awsdriver/bin/*

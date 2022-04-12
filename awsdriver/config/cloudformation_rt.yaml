@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Route Table {{ route_table_name }}.
+
+Resources:
+  {{ route_table_name | replace("-","") | replace("_","") }}RouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId: {{ vpc_id }}
+        Tags:
+          - Key: Name
+            Value: {{ route_table_name }}
+          - Key: Creator
+            Value: cp4na
+
+Outputs:
+  ROUTETABLEID:
+    Description: A reference to the created RouteTable
+    Value: !Ref {{ route_table_name | replace("-","") | replace("_","") }}RouteTable
+

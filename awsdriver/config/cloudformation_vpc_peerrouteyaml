@@ -1,0 +1,16 @@
+AAWSTemplateFormatVersion: 2010-09-09
+Description: Transit Gateway Route Table Attachment and Association for Transit Gateway peer attachment for cidr {{ peer_vpc_id }} and TGW Peer attachment {{ tgw_peer_attachment }}.
+
+# this is created only when public_private != 'public' - see resourcedriver createtgwroutetableassociation
+
+Resources:
+  VpcPeerRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: {{ route_table_id }}
+      DestinationCidrBlock: {{ destination_vpc_cidr }}
+      TransitGatewayId: {{ transit_gateway_id }}
+
+Outputs:
+    Description: A reference to the created VPC Route Table
+    Value: !Ref VpcPeerRoute

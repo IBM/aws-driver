@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Subnet {{ subnet_name }}.
+
+Parameters:
+  {{ subnet_name | replace("-","") | replace("_","") }}CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: {{ cidr_block }}
+  VPCID:
+    Description: Vpc id for existing VPC
+    Type: String
+    Default: {{ vpc_id }}
+
+Resources:
+  {{ subnet_name | replace("-","") | replace("_","") }}:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: {{ cidr_block }}
+      VpcId: {{ vpc_id }}
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: {{ availability_zone }}
+      Tags:
+        - Key: Name
+          Value: {{ subnet_name }}
+        - Key: Creator
+          Value: cp4na
+        
+
+Outputs:
+  SUBNETID:
+    Description: A reference to the created Subnet
+    Value: !Ref {{ subnet_name | replace("-","") | replace("_","") }}

@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Internet Gateway {{ igw_name }}.
+
+Resources:
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: {{ igw_name }}
+        - Key: Creator
+          Value: cp4na
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: {{ vpc_id }}
+
+Outputs:
+  IGWID:
+    Description: A reference to the created InternetGateway
+    Value: !Ref InternetGateway
+  IGWATTACHID:
+    Description: A reference to the created InternetGatewayAttachment
+    Value: !Ref InternetGatewayAttachment

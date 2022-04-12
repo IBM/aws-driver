@@ -1,0 +1,14 @@
+name: aws-driver
+version: 0.0.1
+appVersion: 0.0.1
+apiVersion: v1
+description: A Helm chart for AWS Driver
+keywords:
+- LM
+- Resource Manager
+- Brent
+- Driver
+- AWS Driver
+- aws-driver
+- awsdriver
+engine: gotpl
