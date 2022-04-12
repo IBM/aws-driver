@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class RouteTableCloudFormation(CloudFormation):
 
     def create(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
+        logger.info(f'invoking creation of route table stack for resourece :: {resource_id} and resource_prop as :: {resource_properties}')
         stack_id = self.get_stack_id(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
         if stack_id is None:
             cloudformation_driver = aws_location.cloudformation_driver
@@ -35,6 +36,7 @@ class RouteTableCloudFormation(CloudFormation):
         request_id = build_request_id(CREATE_REQUEST_PREFIX, stack_id)
         associated_topology = AWSAssociatedTopology()
         associated_topology.add_stack_id(resource_name, stack_id)
+        logger.info(f'completed creation of route table stack for resourece :: {resource_id} and resource_prop as :: {resource_properties}')
         return LifecycleExecuteResponse(request_id, associated_topology=associated_topology)
 
     def remove(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):

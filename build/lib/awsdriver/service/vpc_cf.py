@@ -13,6 +13,7 @@ class VPCCloudFormation(CloudFormation):
 
     # Will create a VPC using a Cloudformation template
     def create(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
+        logger.info(f'invoking creation of vpc and dependent stack for resourece :: {resource_id} and resource_prop as :: {resource_properties}')
         stack_id = self.get_stack_id(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
         if stack_id is None:
             cloudformation_driver = aws_location.cloudformation_driver
@@ -36,10 +37,13 @@ class VPCCloudFormation(CloudFormation):
         request_id = build_request_id(CREATE_REQUEST_PREFIX, stack_id)
         associated_topology = AWSAssociatedTopology()
         associated_topology.add_stack_id(resource_name, stack_id)
+        logger.info(f'completed creation of vpc and dependent stack for resourece :: {resource_id} and resource_prop as :: {resource_properties}')
         return LifecycleExecuteResponse(request_id, associated_topology=associated_topology)
 
     def remove(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
+        logger.info(f'invoking removal of vpc and dependent stack for resourece :: {resource_id} and resource_prop as :: {resource_properties}')
         self.__create_resource_name(system_properties, resource_properties, self.get_resource_name(system_properties))
+        logger.info(f'completed removal of vpc and dependent stack for resourece :: {resource_id} and resource_prop as :: {resource_properties}')
         return super().remove(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
 
     def __create_resource_name(self, system_properties, resource_properties, resource_name):
