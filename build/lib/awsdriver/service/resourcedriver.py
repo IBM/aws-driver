@@ -162,6 +162,10 @@ class ResourceDriverHandler(Service, ResourceDriverHandlerCapability):
             status = self.__determine_delete_status(request_id, stack_id, stack_status)
         if status == STATUS_FAILED:
             description = cloudformation_driver.get_stack_failure(stack_id)
+            #check if failure reason is for route entry already exist then skip
+            if 'already exists' in description and 'The route identified by' in description:
+                logger.warn(f'Stack failed as already the route entry is present for stack id {stack_id}, ignore and continue with status as complete')
+                return LifecycleExecution(request_id, STATUS_COMPLETE)
             failure_details = FailureDetails(FAILURE_CODE_INFRASTRUCTURE_ERROR, description)
         outputs = None
         if request_type == CREATE_REQUEST_PREFIX:

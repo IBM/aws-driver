@@ -1,4 +1,2 @@
-
-        [console_scripts]
-        awsdriver-dev=awsdriver.__main__:main
-    
+[console_scripts]
+awsdriver-dev = awsdriver.__main__:main

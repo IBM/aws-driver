@@ -271,7 +271,8 @@ class TGWCloudFormation(CloudFormation):
     
 
     def __create_subnetpeerroute_resource_name(self, system_properties, resource_properties, resource_name):
-        system_properties['resourceName'] = self.sanitize_name(resource_properties.get('vpc_id', ''), '__',resource_properties.get('subnet_name', ''), '__subnetpeerroute')
+        system_properties['resourceName'] = self.sanitize_name(resource_properties.get('vpc_id', ''), '__',resource_properties.get('subnet_name', ''),
+        '__',resource_properties.get('destination_vpc_cidr', ''), '__subnetpeerroute')
         return system_properties['resourceName']
 
     def addsubnetpeerroute(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
