@@ -227,52 +227,46 @@ class TGWCloudFormation(CloudFormation):
         return system_properties['resourceName']
 
     def addtgwpeerroute(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
-        
-        logger.info(f'invoking addtgwpeerroute peer routing for request :: {resource_id} and resource_prop as :: {resource_properties}')
-        stack_id = self.get_stack_id(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
-        if stack_id is None:
-            cloudformation_driver = aws_location.cloudformation_driver
-            resource_name = self.__create_tgwpeerroute_resource_name(system_properties, resource_properties, self.get_resource_name(system_properties))
-            stack_name = self.get_stack_name(resource_id, resource_name)
+            
+            logger.info(f'invoking addtgwpeerroute peer routing for request :: {resource_id} and resource_prop as :: {resource_properties}')
+            stack_id = self.get_stack_id(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
+            if stack_id is None:
+                cloudformation_driver = aws_location.cloudformation_driver
+                resource_name = self.__create_tgwpeerroute_resource_name(system_properties, resource_properties, self.get_resource_name(system_properties))
+                stack_name = self.get_stack_name(resource_id, resource_name)
 
-            cf_template = self.render_template(system_properties, resource_properties, request_properties, 'cloudformation_tgw_peerroute.yaml')
-            cf_parameters = self.get_cf_parameters(resource_properties, system_properties, aws_location, cf_template)
+                cf_template = self.render_template(system_properties, resource_properties, request_properties, 'cloudformation_tgw_peerroute.yaml')
+                cf_parameters = self.get_cf_parameters(resource_properties, system_properties, aws_location, cf_template)
 
-            #add this route in tgw if subnet is global
-            stack_id = cloudformation_driver.create_stack(stack_name, cf_template, cf_parameters)
-            # access_domain_state = resource_properties.get('access_domain_state', None)
-            # if access_domain_state is None:
-            #     raise ResourceDriverError(f'access_domain_state is null for resource_id {resource_id}')
+                #add this route in tgw if subnet is global
+                access_domain_state = resource_properties.get('access_domain_state', None)
+                if access_domain_state is None:
+                    raise ResourceDriverError(f'access_domain_state is null for resource_id {resource_id}')
 
-            # if access_domain_state == 'global':
-            #     try:
-            #         stack_id = cloudformation_driver.create_stack(stack_name, cf_template, cf_parameters)
-            #     except Exception as e:
-            #         logger.error("Error occured ", e)
-            #         raise ResourceDriverError(str(e)) from e
+                if access_domain_state.lower() == 'global':
+                    try:
+                        stack_id = cloudformation_driver.create_stack(stack_name, cf_template, cf_parameters)
+                    except Exception as e:
+                        logger.error("Error occured ", e)
+                        raise ResourceDriverError(str(e)) from e
 
-            #     if stack_id is None:
-            #         raise ResourceDriverError('Failed to create cloudformation stack on AWS')
+            request_id = build_request_id(CREATE_REQUEST_PREFIX, stack_id)
 
-        request_id = build_request_id(CREATE_REQUEST_PREFIX, stack_id)
-
-        associated_topology = AWSAssociatedTopology()
-        associated_topology.add_stack_id(resource_name, stack_id)
-        staickId = associated_topology.get_stack_id(resource_name=resource_name)
-        logger.info(f'check status of stack {staickId}')
-
-        return LifecycleExecuteResponse(request_id, associated_topology=associated_topology)
+            associated_topology = AWSAssociatedTopology()
+            associated_topology.add_stack_id(resource_name, stack_id)
+            logger.info(f'completed addtgwpeerroute peer routing for request :: {resource_id} and resource_prop as :: {resource_properties}')
+            return LifecycleExecuteResponse(request_id, associated_topology=associated_topology)
 
     def removetgwpeerroute(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
-        logger.info(f'invoking removetgwpeerroute routing for request :: {resource_id} and resource_prop as :: {resource_properties}')
+        logger.info(f'invoking remove tgw peerroute routing for request :: {resource_id} and resource_prop as :: {resource_properties}')
         self.__create_tgwpeerroute_resource_name(system_properties, resource_properties, self.get_resource_name(system_properties))
-        return self.removeIgnoringResource(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
-    
+        return super().remove(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
+
+
     
 
     def __create_subnetpeerroute_resource_name(self, system_properties, resource_properties, resource_name):
-        system_properties['resourceName'] = self.sanitize_name(resource_properties.get('vpc_id', ''), '__',resource_properties.get('subnet_name', ''),
-        '__',resource_properties.get('destination_vpc_cidr', ''), '__subnetpeerroute')
+        system_properties['resourceName'] = self.sanitize_name(resource_properties.get('vpc_id', ''), '__',resource_properties.get('subnet_name', ''), '__subnetpeerroute')
         return system_properties['resourceName']
 
     def addsubnetpeerroute(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):

@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 class RouteTableCloudFormation(CloudFormation):
 
     def create(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
-        logger.info(f'invoking creation of route table stack for resourece :: {resource_id} and resource_prop as :: {resource_properties}')
         stack_id = self.get_stack_id(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
         if stack_id is None:
             cloudformation_driver = aws_location.cloudformation_driver
@@ -36,7 +35,6 @@ class RouteTableCloudFormation(CloudFormation):
         request_id = build_request_id(CREATE_REQUEST_PREFIX, stack_id)
         associated_topology = AWSAssociatedTopology()
         associated_topology.add_stack_id(resource_name, stack_id)
-        logger.info(f'completed creation of route table stack for resourece :: {resource_id} and resource_prop as :: {resource_properties}')
         return LifecycleExecuteResponse(request_id, associated_topology=associated_topology)
 
     def remove(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
@@ -124,7 +122,11 @@ class RouteTableCloudFormation(CloudFormation):
             if subnet_id is None:
                 raise ResourceDriverError(f'Missing subnet_id for adddsubnetroute for resource {resource_name}')
 
-            if (public_private.lower() == 'private' and routetable_type.lower() == 'intravpc') or (public_private.lower() == 'public' and routetable_type.lower() == 'igw'):
+            access_domain_state = resource_properties.get('access_domain_state', None)
+            if access_domain_state is None:
+                raise ResourceDriverError(f'access_domain_state is null for resource_id {resource_id}')
+
+            if (public_private.lower() == 'private'  and access_domain_state.lower() == 'global' and routetable_type.lower() == 'intravpc') or (public_private.lower() == 'public' and routetable_type.lower() == 'igw'):
                 driver_resource_name = self.__create_subnetroute_resource_name(subnet_id, system_properties, resource_name)
                 stack_name = self.get_stack_name(resource_id, driver_resource_name)
 
@@ -178,7 +180,11 @@ class RouteTableCloudFormation(CloudFormation):
             if routetable_type is None:
                 raise ResourceDriverError(f'routetable_type is null')
 
-            if (public_private.lower() == 'private' and routetable_type.lower() == 'intravpc') or (public_private.lower() == 'public' and routetable_type.lower() == 'igw'):
+            access_domain_state = resource_properties.get('access_domain_state', None)
+            if access_domain_state is None:
+                raise ResourceDriverError(f'access_domain_state is null for resource_id {resource_id}')
+
+            if (public_private.lower() == 'private'  and access_domain_state.lower() == 'global' and routetable_type.lower() == 'intravpc') or (public_private.lower() == 'public' and routetable_type.lower() == 'igw'):
                 resource_name = self.__create_subnetinternetroute_resource_name(system_properties, resource_properties, self.get_resource_name(system_properties))
                 stack_name = self.get_stack_name(resource_id, resource_name)
 

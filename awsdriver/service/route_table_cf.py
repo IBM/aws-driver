@@ -122,7 +122,11 @@ class RouteTableCloudFormation(CloudFormation):
             if subnet_id is None:
                 raise ResourceDriverError(f'Missing subnet_id for adddsubnetroute for resource {resource_name}')
 
-            if (public_private.lower() == 'private' and routetable_type.lower() == 'intravpc') or (public_private.lower() == 'public' and routetable_type.lower() == 'igw'):
+            access_domain_state = resource_properties.get('access_domain_state', None)
+            if access_domain_state is None:
+                raise ResourceDriverError(f'access_domain_state is null for resource_id {resource_id}')
+
+            if (public_private.lower() == 'private'  and access_domain_state.lower() == 'global' and routetable_type.lower() == 'intravpc') or (public_private.lower() == 'public' and routetable_type.lower() == 'igw'):
                 driver_resource_name = self.__create_subnetroute_resource_name(subnet_id, system_properties, resource_name)
                 stack_name = self.get_stack_name(resource_id, driver_resource_name)
 
@@ -176,7 +180,11 @@ class RouteTableCloudFormation(CloudFormation):
             if routetable_type is None:
                 raise ResourceDriverError(f'routetable_type is null')
 
-            if (public_private.lower() == 'private' and routetable_type.lower() == 'intravpc') or (public_private.lower() == 'public' and routetable_type.lower() == 'igw'):
+            access_domain_state = resource_properties.get('access_domain_state', None)
+            if access_domain_state is None:
+                raise ResourceDriverError(f'access_domain_state is null for resource_id {resource_id}')
+
+            if (public_private.lower() == 'private'  and access_domain_state.lower() == 'global' and routetable_type.lower() == 'intravpc') or (public_private.lower() == 'public' and routetable_type.lower() == 'igw'):
                 resource_name = self.__create_subnetinternetroute_resource_name(system_properties, resource_properties, self.get_resource_name(system_properties))
                 stack_name = self.get_stack_name(resource_id, resource_name)
 
