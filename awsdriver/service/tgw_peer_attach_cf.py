@@ -176,6 +176,10 @@ class TGWPACloudFormation(CloudFormation):
                 if access_domain_state is None:
                     raise ResourceDriverError(f'access_domain_state is null for resource_id {resource_id}')
 
+                tgw_peer_attachment_id = resource_properties.get('tgw_peer_attachment_id', None)
+                if tgw_peer_attachment_id is None:
+                    raise ResourceDriverError(f'TransitGatewayAttachmentId is null for resource_id {resource_id}')
+                    
                 if access_domain_state.lower() == 'global':
                     try:
                         stack_id = cloudformation_driver.create_stack(stack_name, cf_template, cf_parameters)

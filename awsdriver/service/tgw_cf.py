@@ -222,8 +222,7 @@ class TGWCloudFormation(CloudFormation):
 
     
     def __create_tgwpeerroute_resource_name(self, system_properties, resource_properties, resource_name):
-        system_properties['resourceName'] = self.sanitize_name(resource_properties.get('region', ''), '__', resource_properties.get('peer_region_name', ''),
-        '__', resource_properties.get('vpc_id', ''), '__tgwpeerroute')
+        system_properties['resourceName'] = self.sanitize_name(resource_properties.get('subnet_name', ''), '__', resource_properties.get('vpc_id', ''), '__tgwpeerroute')
         return system_properties['resourceName']
 
     def addtgwpeerroute(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
@@ -242,6 +241,10 @@ class TGWCloudFormation(CloudFormation):
                 access_domain_state = resource_properties.get('access_domain_state', None)
                 if access_domain_state is None:
                     raise ResourceDriverError(f'access_domain_state is null for resource_id {resource_id}')
+                
+                tgw_peer_attachment_id = resource_properties.get('tgw_peer_attachment_id', None)
+                if tgw_peer_attachment_id is None:
+                    raise ResourceDriverError(f'TransitGatewayAttachmentId is null for resource_id {resource_id}')
 
                 if access_domain_state.lower() == 'global':
                     try:

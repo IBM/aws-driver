@@ -8,7 +8,7 @@ Resources:
     Type: AWS::EC2::TransitGatewayRoute
     Properties:
       Blackhole: false
-      DestinationCidrBlock: {{ destination_vpc_cidr }}
+      DestinationCidrBlock: {{ subnet_cidr }}
       TransitGatewayAttachmentId: {{tgw_peer_attachment_id}}
       TransitGatewayRouteTableId: {{transit_route_table_id}}
   TransitGatewayAttachmentAssociation:
