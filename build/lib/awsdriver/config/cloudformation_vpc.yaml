@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: VPC {{ vpc_name }}.
+
+Parameters:
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: {{ cidr_block }}
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: {{ cidr_block }}
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: {{ vpc_name }}
+        - Key: Creator
+          Value: cp4na
+
+Outputs:
+  VPCID:
+    Description: A reference to the created VPC
+    Value: !Ref VPC

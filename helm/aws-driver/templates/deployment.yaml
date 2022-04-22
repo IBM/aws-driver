@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aws-driver
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      app: aws-driver
+  template:
+    metadata:
+      labels:
+        app: aws-driver
+        part-of: lm
+    spec:
+{{- if .Values.app.affinity }}
+      affinity:
+{{ toYaml .Values.app.affinity | indent 8 }}
+{{- end }}
+{{- if .Values.app.tolerations }}
+      tolerations:
+{{ toYaml .Values.app.tolerations | indent 8 }}
+{{- end }}
+      containers:
+        - name: aws-driver
+          image: {{ .Values.docker.image }}:{{ .Values.docker.version }}
+          imagePullPolicy: {{ .Values.docker.imagePullPolicy }}
+          {{- if or (not (.Capabilities.APIVersions.Has "security.openshift.io/v1")) (eq .Release.Namespace "kube-system") (ne (toString .Values.global.arbitraryUids) "true") }}
+          securityContext:
+            # run as awsdriver user created in docker image
+            runAsUser: 101
+          {{- end }}
+          ports:
+          - containerPort: 7276
+            protocol: TCP
+          {{- if .Values.app.livenessProbe.enabled }}
+          livenessProbe:
+            failureThreshold: {{ .Values.app.livenessProbe.failureThreshold }}
+            httpGet:
+              path: /management/health
+              port: 7276
+              scheme: {{- if .Values.app.config.security.ssl.enabled }} HTTPS {{- else }} HTTP {{- end }}
+            initialDelaySeconds: {{ .Values.app.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.app.livenessProbe.periodSeconds }}
+          {{- end }}
+          {{- if .Values.app.readinessProbe.enabled }}
+          readinessProbe:
+            failureThreshold: {{ .Values.app.readinessProbe.failureThreshold }}
+            httpGet:
+              path: /management/health
+              port: 7276
+              scheme: {{- if .Values.app.config.security.ssl.enabled }} HTTPS {{- else }} HTTP {{- end }}
+            initialDelaySeconds: {{ .Values.app.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.app.readinessProbe.periodSeconds }}         
+          {{- end }}
+          envFrom:
+          - configMapRef:
+              name: aws-driver-env
+          resources:
+{{ toYaml .Values.app.resources | indent 12 }}   
+          volumeMounts:
+          - name: config
+            mountPath: /var/awsdriver/awsdriver_config.yml
+            subPath: awsdriver_config.yml
+          {{- if and .Values.app.config.security.ssl.enabled .Values.app.config.security.ssl.secret.name }}
+          - name: {{ .Values.app.config.security.ssl.secret.name }}
+            mountPath: /var/awsdriver/certs
+          {{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: aws-driver
+      {{- if and .Values.app.config.security.ssl.enabled .Values.app.config.security.ssl.secret.name }}
+      - name: {{ .Values.app.config.security.ssl.secret.name }}
+        secret:
+          secretName: {{ .Values.app.config.security.ssl.secret.name }}
+      {{- end }}
+{{- if .Values.app.autoscaler.enabled }}
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: aws-driver
+spec:
+  maxReplicas: {{ .Values.app.autoscaler.maxReplicas }}
+  minReplicas: {{ .Values.app.autoscaler.minReplicas }}
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: aws-driver
+  targetCPUUtilizationPercentage: {{ .Values.app.autoscaler.targetCPUUtilizationPercentage }}
+{{- end }}

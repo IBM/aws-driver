@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Route Table {{ route_table_id }} Subnet {{ subnet_id }} Internet Route.
+
+Resources:
+  SubnetRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        RouteTableId: {{ route_table_id }}
+        SubnetId: {{ subnet_id }}
+
+Outputs:
+  SUBRTASSOCID:
+    Description: A reference to the created SubnetRouteTableAssociation
+    Value: !Ref SubnetRouteTableAssociation

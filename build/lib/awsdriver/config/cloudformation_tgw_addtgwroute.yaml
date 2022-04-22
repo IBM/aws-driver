@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Transit Gateway Route for Route Table {{ transit_route_table_id }} and CIDR {{ cidr_block }}.
+
+# this will only be created if access_domain_state == 'global', see resourcedriver addtgwroute
+
+Resources:
+  TransitGatewayRoute:
+    Type: AWS::EC2::TransitGatewayRoute
+    Properties:
+      Blackhole: false
+      DestinationCidrBlock: {{ cidr_block }}
+      TransitGatewayAttachmentId: {{request_properties.transit_gateway_attachment_id}}
+      TransitGatewayRouteTableId: {{transit_route_table_id}}
+
+Outputs:
+  {{ subnet | replace("-","") + "Rule"}}:
+    Description: A reference to the created Transit Gateway Attachment
+    Value: !Ref TransitGatewayRoute

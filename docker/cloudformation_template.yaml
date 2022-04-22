@@ -1,0 +1,177 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description:  This template deploys a VPC, with a pair of public and private subnets spread
+  across two Availability Zones. It deploys an internet gateway, with a default
+  route on the public subnets. It deploys a pair of NAT gateways (one in each AZ),
+  and default routes for them in the private subnets.
+
+Parameters:{% if system_properties.resourceName %}
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    Default: test
+  {% endif %}{% if 'AWSVPC' in system_properties.resourceType %}
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: {{ cidr_block }}{% endif %}
+  {% if 'AWSSubnet' in system_properties.resourceType %}{{ subnet_name | replace("-","") | replace("_","") }}CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: {{ cidr_block }}{% endif %}
+  {% if 'AWSSubnet' in system_properties.resourceType %}VPCID:
+    Description: Vpc id for existing VPC
+    Type: String
+    Default: {{ vpc_id }}{% endif %}
+
+Conditions:
+  HasNot:
+    Fn::Equals: [ 'a', 'b' ]
+
+Resources:
+  {% set resourceFound = 0 %}
+  {% if 'AWSVPC' in system_properties.resourceType %}VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: {{ cidr_block }}
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: {{ vpc_name }}{% set resourceFound = 1 %}{% endif %}
+  {% if 'AWSInternetGateway' in system_properties.resourceType and transitionName == 'install' %}InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: {{ igw_name }}
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: {{ vpc_id }}{% set resourceFound = 1 %}{% endif %}
+  {% if 'AWSSubnet' in system_properties.resourceType %}{{ subnet_name | replace("-","") | replace("_","") }}:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: {{ cidr_block }}
+      VpcId: {{ vpc_id }}
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: {{ subnet_name }}
+  {% set resourceFound = 1 %}{% endif %}
+  {% if 'AWSRouteTable' in system_properties.resourceType and transitionName == 'install' %}{{ route_table_name | replace("-","") | replace("_","") }}RouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId: {{ vpc_id }}
+        Tags:
+          - Key: Name
+            Value: {{ route_table_name }}
+  {% set resourceFound = 1 %}{% endif %}
+  {% if 'AWSRouteTable' in system_properties.resourceType and ( transitionName == 'addsubnetroute' or transitionName == 'addsubnetinternetroute') and ((public_private|lower == 'private' and routetable_type|lower == 'intravpc') or (public_private|lower == 'public' and routetable_type|lower == 'igw')) %}SubnetRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        RouteTableId: {{ route_table_id }}
+        SubnetId: {{ subnet_id }}
+  {% set resourceFound = 1 %}{% endif %}
+  {% if 'AWSRouteTable' in system_properties.resourceType and transitionName == 'addroute' and public_private|lower != 'private' and routetable_type|lower != 'intravpc' %}{{ route_table_name | replace("-","") | replace("_","") }}Route:
+     Type: AWS::EC2::Route
+     Properties:
+       RouteTableId: {{ route_table_id }}
+       DestinationCidrBlock: {{ route_cidr_block }}
+       {% if igw_id is defined %}GatewayId: {{ igw_id }}{% endif %}
+       {% if transit_id is defined %}TransitGatewayId: {{ transit_id }}{% endif %}
+  {% set resourceFound = 1 %}{% endif %}
+  {% if 'AWSTransitGateway' in system_properties.resourceType and subnet_id is not defined %}TransitGateway:
+    Type: AWS::EC2::TransitGateway
+    Properties:
+      AmazonSideAsn: {{ aws_side_asn }}{% if description %}
+      AssociationDefaultRouteTableId: {{ association_default_route_table_id }}{% endif %}
+      AutoAcceptSharedAttachments: {{ auto_accept_shared_attachments }}
+      DefaultRouteTableAssociation: {{ default_route_table_association }}
+      DefaultRouteTablePropagation: {{ default_route_table_propagation }}
+      {% if description %}Description: {{ description }}{% endif %}
+      DnsSupport: {{ dns_support }}
+      MulticastSupport: {{ multicast_support }}
+      PropagationDefaultRouteTableId: {{ propagation_default_route_tableId }}
+      {% if transit_gateway_cidr_blocks %}TransitGatewayCidrBlocks: {% for cidr in transit_gateway_cidr_blocks %}
+        - {{ cidr }}{% endfor %}{% endif %}
+      VpnEcmpSupport: {{ vpn_ecmp_support }}
+  TransitGatewayRouteTable:
+    Type: AWS::EC2::TransitGatewayRouteTable
+    Properties:
+      TransitGatewayId: !Ref TransitGateway{% set resourceFound = 1 %}{% endif %}
+  {% if 'AWSTransitGateway' in system_properties.resourceType and association_exists == false and public_private|lower != 'public' %}TransitGatewayAttachment:
+    Type: AWS::EC2::TransitGatewayVpcAttachment
+    Properties:
+      SubnetIds:
+        - {{ subnet_id }}
+      TransitGatewayId: {{ transit_id }}
+      VpcId: {{ vpc_id }}
+  TransitGatewayAttachmentAssociation:
+    Type: AWS::EC2::TransitGatewayRouteTableAssociation
+    Properties:
+      TransitGatewayAttachmentId: !Ref TransitGatewayAttachment
+      TransitGatewayRouteTableId: {{transit_route_table_id}}
+  {% if global_route == 'true' %}
+  TransitGatewayRoute:
+    Type: AWS::EC2::TransitGatewayRoute
+    Properties:
+      Blackhole: false
+      DestinationCidrBlock: 0.0.0.0/0
+      TransitGatewayAttachmentId: !Ref TransitGatewayAttachment
+      TransitGatewayRouteTableId: {{transit_route_table_id}}
+  {% endif %}
+  {% set resourceFound = 1 %}{% endif %}
+  {% if 'AWSTransitGateway' in system_properties.resourceType and access_domain_state == 'global' and create_route == true %}
+  TransitGatewayRoute:
+    Type: AWS::EC2::TransitGatewayRoute
+    Properties:
+      Blackhole: false
+      DestinationCidrBlock: {{ cidr_block }}
+      TransitGatewayAttachmentId: {{ transit_attachment_name }}
+      TransitGatewayRouteTableId: {{transit_route_table_id}}
+  {% set resourceFound = 1 %}{% endif %}
+  {% if not resourceFound %}NullResource:
+      Type: 'Custom::NullResource'
+      Condition: HasNot{% endif %}
+
+Outputs:
+  {% if 'AWSVPC' in system_properties.resourceType %}VPCID:
+    Description: A reference to the created VPC
+    Value: !Ref VPC{% endif %}
+  {% if 'AWSSubnet' in system_properties.resourceType %}SUBNETID:
+    Description: A reference to the created Subnet
+    Value: !Ref {{ subnet_name | replace("-","") | replace("_","") }}{% endif %}
+  {% if 'AWSInternetGateway' in system_properties.resourceType and transitionName == 'install' %}IGWID:
+    Description: A reference to the created InternetGateway
+    Value: !Ref InternetGateway
+  IGWATTACHID:
+    Description: A reference to the created InternetGatewayAttachment
+    Value: !Ref InternetGatewayAttachment{% endif %}
+  {% if 'AWSRouteTable' in system_properties.resourceType and transitionName == 'install' %}ROUTETABLEID:
+    Description: A reference to the created RouteTable
+    Value: !Ref {{ route_table_name | replace("-","") | replace("_","") }}RouteTable{% endif %}
+  {% if 'AWSRouteTable' in system_properties.resourceType and ( transitionName == 'addsubnetroute' or transitionName == 'addsubnetinternetroute') and ((public_private|lower == 'private' and routetable_type|lower == 'intravpc') or (public_private|lower == 'public' and routetable_type|lower == 'igw')) %}SUBRTASSOCID:
+    Description: A reference to the created SubnetRouteTableAssociation
+    Value: !Ref SubnetRouteTableAssociation{% endif %}
+  {% if 'AWSRouteTable' in system_properties.resourceType and transitionName == 'addroute' and public_private|lower != 'private' and routetable_type|lower != 'intravpc' %}ROUTEID:
+    Description: A reference to the created Route
+    Value: !Ref {{ route_table_name | replace("-","") | replace("_","") }}Route{% endif %}
+  {% if 'AWSTransitGateway' in system_properties.resourceType and subnet_id is not defined%}TGWID:
+    Description: A reference to the created Transit Gateway
+    Value: !Ref TransitGateway{% endif %}
+  {% if 'AWSTransitGateway' in system_properties.resourceType and subnet_id is not defined%}TGWRTID:
+    Description: A reference to the created Transit Gateway Route Table
+    Value: !Ref TransitGatewayRouteTable{% endif %}
+  {% if 'AWSTransitGatewayPeerAttachment' in system_properties.resourceType %}TGWPAID:
+    Description: A reference to the created Transit Gateway Peer Attachment 
+    Value: !Ref TransitGatewayPeeringAttachment{% endif %}
+  {% if 'AWSTransitGateway' in system_properties.resourceType and association_exists == false and public_private|lower != 'public' %}{{ vpc_id | replace("-","") + "Attachment"}}:
+    Description: A reference to the created Transit Gateway Attachment
+    Value: !Ref TransitGatewayAttachment{% endif %}
+  {% if 'AWSTransitGateway' in system_properties.resourceType and access_domain_state == 'global' and create_route == true %}{{ subnet | replace("-","") + "Rule"}}:
+    Description: A reference to the created Transit Gateway Attachment
+    Value: !Ref TransitGatewayRoute{% endif %}
+  {% if not resourceFound %}NullResourceOutput:
+    Description: Null Resource Output
+    Value: dummy {% endif %}

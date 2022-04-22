@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Route Table {{ route_table_id }} Route {{ route_cidr_block }}.
+
+# created only if public_private|lower != 'private' and routetable_type|lower != 'intravpc'
+# see resourcedriver addroute
+
+Resources:
+  {{ route_table_name | replace("-","") | replace("_","") }}Route:
+     Type: AWS::EC2::Route
+     Properties:
+       RouteTableId: {{ route_table_id }}
+       DestinationCidrBlock: {{ route_cidr_block }}
+       {% if igw_id is defined %}
+       GatewayId: {{ igw_id }}
+       {% endif %}
+       {% if transit_gateway_id is defined %}
+       TransitGatewayId: {{ transit_gateway_id }}
+       {% endif %}
+
+Outputs:
+  ROUTEID:
+    Description: A reference to the created Route
+    Value: !Ref {{ route_table_name | replace("-","") | replace("_","") }}Route
+
