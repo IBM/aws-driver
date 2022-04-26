@@ -126,6 +126,8 @@ class TGWCloudFormation(CloudFormation):
                         resource_properties['updated_subnet_id'] = subnet_id
                         resource_properties['subnet_ids'] = existing_subnets
                         logger.info(f'All subnet association completed prior to subnet index {subnet_index}, proceeding with this subnet association')
+                        sleepseconds(60)
+                        logger.info(f'Creating subnet association through api  for {subnet_id}')
                         aws_location.ec2.modify_transit_gateway_vpc_attachment(
                             TransitGatewayAttachmentId=tgw_vpc_attach_id,
                             AddSubnetIds=[
