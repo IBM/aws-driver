@@ -1,5 +1,6 @@
 import ast
 from cmath import log
+import json
 import random
 from time import sleep as sleepseconds
 from awsdriver.service.common import CREATE_REQUEST_PREFIX, build_request_id
@@ -61,10 +62,15 @@ class TGWCloudFormation(CloudFormation):
             raise ResourceDriverError(f'Missing availability_zone property for operation createtgwroutetableassociation on resource {resource_id}')
         else:
             logger.info(f'availability_zone value came as :::::::: {availability_zone}')
+        azList = []
         azListVal = resource_properties.get('azList', None)
-        azList = ast.literal_eval(azListVal)
-        if azList is None:
+        if azListVal is None:
             raise ResourceDriverError(f'Missing azList property for operation createtgwroutetableassociation on resource {resource_id}')
+        json_obj = json.loads(azListVal)
+        for value in json_obj:
+            azList.append(value["az"])
+        if azList is None or len(azList) < 1:
+            raise ResourceDriverError(f'Unable to retrieve availablity zone list  for operation createtgwroutetableassociation on resource {resource_id}')
         else:
             logger.info(f'azlist value came as :::::::: {azList}')
         subnet_index = None
