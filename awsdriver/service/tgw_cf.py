@@ -116,6 +116,7 @@ class TGWCloudFormation(CloudFormation):
                         sleepseconds(30)
                         continue
                     existing_subnets = tgw_vpc_attach["SubnetIds"]
+                    tgw_vpc_attach_id = tgw_vpc_attach["TransitGatewayAttachmentId"]
                     if len(existing_subnets) < subnet_index-1:
                         wait_for_prior_subnet = True
                         logger.info(f'Subnet tgw association has existing subents {existing_subnets} , need to wait for all to complete for subnet index {subnet_index}')
@@ -125,7 +126,47 @@ class TGWCloudFormation(CloudFormation):
                         resource_properties['updated_subnet_id'] = subnet_id
                         resource_properties['subnet_ids'] = existing_subnets
                         logger.info(f'All subnet association completed prior to subnet index {subnet_index}, proceeding with this subnet association')
-                        break
+                        aws_location.ec2.modify_transit_gateway_vpc_attachment(
+                            TransitGatewayAttachmentId=tgw_vpc_attach_id,
+                            AddSubnetIds=[
+                                subnet_id,
+                            ],
+                        )
+                        request_id = build_request_id(CREATE_REQUEST_PREFIX, 'SKIP')
+
+                        ##return only when tgw attach modificaiton is complete
+                        check_status = True
+                        while(check_status):
+                            tgw_vpc_attach_resp_repeat = aws_location.ec2.describe_transit_gateway_vpc_attachments(
+                                                Filters=[
+                                                    {
+                                                        'Name': 'transit-gateway-id',
+                                                        'Values': [
+                                                            tgw_id,
+                                                        ]
+                                                    },
+                                                    {
+                                                        'Name': 'vpc-id',
+                                                        'Values': [
+                                                            vpc_id,
+                                                        ]
+                                                    },
+                                                ],
+                                            )
+
+                            if tgw_vpc_attach_resp_repeat is not None:
+                                tgw_vpc_attach_list_repeat = tgw_vpc_attach_resp_repeat['TransitGatewayVpcAttachments']
+                                if len(tgw_vpc_attach_list_repeat) == 0:
+                                    sleepseconds(30)
+                                    continue
+                                tgw_vpc_attach_repeat = tgw_vpc_attach_list_repeat[0]
+                                if str(tgw_vpc_attach_repeat["State"]) != 'available' :
+                                    sleepseconds(30)
+                                    continue
+                                else:
+                                    check_status = False
+                                    break
+                        return LifecycleExecuteResponse(request_id, associated_topology=associated_topology)
 
 
 
