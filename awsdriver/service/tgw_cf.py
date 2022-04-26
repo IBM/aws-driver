@@ -117,7 +117,7 @@ class TGWCloudFormation(CloudFormation):
                         continue
                     existing_subnets = tgw_vpc_attach["SubnetIds"]
                     tgw_vpc_attach_id = tgw_vpc_attach["TransitGatewayAttachmentId"]
-                    if len(existing_subnets) < subnet_index-1:
+                    if len(existing_subnets) != subnet_index:
                         wait_for_prior_subnet = True
                         logger.info(f'Subnet tgw association has existing subents {existing_subnets} , need to wait for all to complete for subnet index {subnet_index}')
                         sleepseconds(30)
