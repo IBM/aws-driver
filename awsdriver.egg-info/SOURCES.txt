@@ -28,6 +28,7 @@ awsdriver/config/cloudformation_tgw_addtgwroute.yaml
 awsdriver/config/cloudformation_tgw_createrta.yaml
 awsdriver/config/cloudformation_tgw_createtgwpeerattachment_template.yaml
 awsdriver/config/cloudformation_tgw_peerroute.yaml
+awsdriver/config/cloudformation_tgw_update_attach.yaml
 awsdriver/config/cloudformation_vpc.yaml
 awsdriver/config/default_config.yml
 awsdriver/location/__init__.py
@@ -46,17 +47,3 @@ awsdriver/service/tgw_cf.py
 awsdriver/service/tgw_peer_attach_cf.py
 awsdriver/service/topology.py
 awsdriver/service/vpc_cf.py
-awsdriver/venv/bin/activate_this.py
-awsdriver/venv/bin/jp.py
-awsdriver/venv/bin/rst2html.py
-awsdriver/venv/bin/rst2html4.py
-awsdriver/venv/bin/rst2html5.py
-awsdriver/venv/bin/rst2latex.py
-awsdriver/venv/bin/rst2man.py
-awsdriver/venv/bin/rst2odt.py
-awsdriver/venv/bin/rst2odt_prepstyles.py
-awsdriver/venv/bin/rst2pseudoxml.py
-awsdriver/venv/bin/rst2s5.py
-awsdriver/venv/bin/rst2xetex.py
-awsdriver/venv/bin/rst2xml.py
-awsdriver/venv/bin/rstpep2html.py

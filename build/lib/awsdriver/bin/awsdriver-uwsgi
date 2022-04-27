@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-if [[ $( tr '[:upper:]' '[:lower:]' <<<$SSL_ENABLED ) == "true" ]]; then
-    PORT="--https :$DRIVER_PORT,/var/awsdriver/certs/tls.crt,/var/awsdriver/certs/tls.key"
-else
-    PORT="--http :$DRIVER_PORT"
-fi
-
-uwsgi $PORT --master --processes $NUM_PROCESSES --threads $NUM_THREADS --module "awsdriver:create_wsgi_app()"

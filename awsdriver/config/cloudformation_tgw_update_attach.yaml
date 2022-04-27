@@ -7,24 +7,14 @@ Resources:
   TransitGatewayAttachment:
     Type: AWS::EC2::TransitGatewayVpcAttachment
     Properties:
+      AddSubnetIds:
+        - {{ updated_subnet_id }}
       SubnetIds:
-        - {{ subnet_id }}
+      {%- for line in subnet_ids %}
+        - {{ line -}}
+      {% endfor %}
       TransitGatewayId: {{ transit_gateway_id }}
       VpcId: {{ vpc_id }}
-  TransitGatewayAttachmentAssociation:
-    Type: AWS::EC2::TransitGatewayRouteTableAssociation
-    Properties:
-      TransitGatewayAttachmentId: !Ref TransitGatewayAttachment
-      TransitGatewayRouteTableId: {{transit_route_table_id}}
-  {% if global_route == 'true' %}
-  TransitGatewayRoute:
-    Type: AWS::EC2::TransitGatewayRoute
-    Properties:
-      Blackhole: false
-      DestinationCidrBlock: 0.0.0.0/0
-      TransitGatewayAttachmentId: !Ref TransitGatewayAttachment
-      TransitGatewayRouteTableId: {{transit_route_table_id}}
-  {% endif %}
 Outputs:
   {{ vpc_id | replace("-","") + "TGWATTACHID"}}:
     Description: A reference to the created Transit Gateway Attachment
