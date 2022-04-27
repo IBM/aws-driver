@@ -1,3 +1,4 @@
+from ast import Not
 from awsdriver.service.common import CREATE_REQUEST_PREFIX, build_request_id
 from ignition.model.lifecycle import LifecycleExecuteResponse
 from ignition.service.resourcedriver import ResourceDriverError
@@ -13,8 +14,25 @@ class VPCCloudFormation(CloudFormation):
 
     # Will create a VPC using a Cloudformation template
     def create(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
+        logger.info(f'invoking creation of vpc for request :: {resource_id} and resource_prop as :: {resource_properties}')
         stack_id = self.get_stack_id(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
         if stack_id is None:
+            #TODO find cloud formation way of creating key-pair so that rollback can be supported.
+            '''
+            Create/import the new key pair for velocloud, before creating the vpc in that region.
+            Using ec2 client for automation of key-pair 
+            '''
+            publicKey = resource_properties.get('ssh_key_name', None)
+            if publicKey is not None:
+                try:
+                    publicKeyValue = resource_properties.get('ssh_pub_key_value', None)
+                    if publicKeyValue is not None:
+                        logger.info(f'importing key for vpc creation as key :: {publicKey}')
+                        aws_location.ec2.import_key_pair(KeyName=publicKey,PublicKeyMaterial=publicKeyValue)
+                    
+                except Exception as keyExp:
+                    logger.error("Failed importing the key pair value before creating the vpc", keyExp)
+                    raise ResourceDriverError(str(keyExp)) from keyExp
             cloudformation_driver = aws_location.cloudformation_driver
 
             resource_name = self.__create_resource_name(system_properties, resource_properties, self.get_resource_name(system_properties))
@@ -36,9 +54,11 @@ class VPCCloudFormation(CloudFormation):
         request_id = build_request_id(CREATE_REQUEST_PREFIX, stack_id)
         associated_topology = AWSAssociatedTopology()
         associated_topology.add_stack_id(resource_name, stack_id)
+        logger.info(f'completed creation of vpc for request :: {resource_id} and resource_prop as :: {resource_properties}')
         return LifecycleExecuteResponse(request_id, associated_topology=associated_topology)
 
     def remove(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
+        logger.info(f'invoking removal of vpc for request :: {resource_id} and resource_prop as :: {resource_properties}')
         self.__create_resource_name(system_properties, resource_properties, self.get_resource_name(system_properties))
         return super().remove(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
 
