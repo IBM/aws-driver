@@ -349,7 +349,7 @@ class TGWCloudFormation(CloudFormation):
 
     
     def __create_tgwpeerroute_resource_name(self, system_properties, resource_properties, resource_name):
-        system_properties['resourceName'] = self.sanitize_name(resource_properties.get('subnet_name', ''), '__', resource_properties.get('vpc_id', ''), '__tgwpeerroute')
+        system_properties['resourceName'] = self.sanitize_name(resource_properties.get('subnet_cidr', ''), '__', resource_properties.get('vpc_id', ''), '__tgwpeerroute')
         return system_properties['resourceName']
 
     def addtgwpeerroute(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
