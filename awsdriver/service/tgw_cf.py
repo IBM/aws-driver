@@ -85,34 +85,22 @@ class TGWCloudFormation(CloudFormation):
 
         template_type  = 'cloudformation_tgw_createrta.yaml'
 
+        is_primary = resource_properties.get('primary', None)
+        if is_primary is None:
+            is_primary = request_properties.get('primary', None)
+
+        is_primary = self.__as_boolean(is_primary)
+
         #for subnet index != 0 , wait for other subnet to complete attachment in order
-        if subnet_index > 0:
-            template_type = 'cloudformation_tgw_update_attach.yaml'
+        if subnet_index > 0 and is_primary:
+            logger.info(f'Multiple availablity zone found, attaching primary subnet from other zone')
             wait_for_prior_subnet = True
             tgw_id =  resource_properties['transit_gateway_id']
             vpc_id =  resource_properties['vpc_id']
-            logger.info(f'value coming as :::::::::::{tgw_id}  and ::::::::::: {vpc_id}    ')
             while(wait_for_prior_subnet):
-                tgw_vpc_attach_resp = aws_location.ec2.describe_transit_gateway_vpc_attachments(
-                                    Filters=[
-                                        {
-                                            'Name': 'transit-gateway-id',
-                                            'Values': [
-                                                tgw_id,
-                                            ]
-                                        },
-                                        {
-                                            'Name': 'vpc-id',
-                                            'Values': [
-                                                vpc_id,
-                                            ]
-                                        },
-                                    ],
-                                )
+                tgw_vpc_attach_resp = self.get_aws_vpc_attach(aws_location, tgw_id, vpc_id)
 
-                
                 if tgw_vpc_attach_resp is not None:
-                    logger.info(f'New tgw_vpc_attach_resp came as {tgw_vpc_attach_resp}')
                     tgw_vpc_attach_list = tgw_vpc_attach_resp['TransitGatewayVpcAttachments']
                     if len(tgw_vpc_attach_list) == 0:
                         sleepseconds(30)
@@ -129,11 +117,10 @@ class TGWCloudFormation(CloudFormation):
                         sleepseconds(30)
                     else:
                         wait_for_prior_subnet = False
-                        resource_properties['updated_subnet_id'] = subnet_id
                         resource_properties['subnet_ids'] = existing_subnets
                         logger.info(f'All subnet association completed prior to subnet index {subnet_index}, proceeding with this subnet association')
                         sleepseconds(60)
-                        logger.info(f'Creating subnet association through api  for {subnet_id}')
+                        logger.info(f'Creating subnet association through direct api  for {subnet_id}')
                         aws_location.ec2.modify_transit_gateway_vpc_attachment(
                             TransitGatewayAttachmentId=tgw_vpc_attach_id,
                             AddSubnetIds=[
@@ -143,24 +130,9 @@ class TGWCloudFormation(CloudFormation):
                         request_id = build_request_id(CREATE_REQUEST_PREFIX, 'SKIP')
 
                         ##return only when tgw attach modificaiton is complete
-                        check_status = True
-                        while(check_status):
-                            tgw_vpc_attach_resp_repeat = aws_location.ec2.describe_transit_gateway_vpc_attachments(
-                                                Filters=[
-                                                    {
-                                                        'Name': 'transit-gateway-id',
-                                                        'Values': [
-                                                            tgw_id,
-                                                        ]
-                                                    },
-                                                    {
-                                                        'Name': 'vpc-id',
-                                                        'Values': [
-                                                            vpc_id,
-                                                        ]
-                                                    },
-                                                ],
-                                            )
+                        ATTACH_NOT_AVAILABLE = True
+                        while(ATTACH_NOT_AVAILABLE):
+                            tgw_vpc_attach_resp_repeat = self.get_aws_vpc_attach(aws_location, tgw_id, vpc_id)
 
                             if tgw_vpc_attach_resp_repeat is not None:
                                 tgw_vpc_attach_list_repeat = tgw_vpc_attach_resp_repeat['TransitGatewayVpcAttachments']
@@ -172,17 +144,14 @@ class TGWCloudFormation(CloudFormation):
                                     sleepseconds(30)
                                     continue
                                 else:
-                                    check_status = False
+                                    ATTACH_NOT_AVAILABLE = False
                                     break
                         return LifecycleExecuteResponse(request_id, associated_topology=associated_topology)
-
-
 
 
         stack_id = self.get_stack_id(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
         if stack_id is None:
             cloudformation_driver = aws_location.cloudformation_driver
-
             
             if subnet_id is None:
                 public_private = request_properties.get('subnet_id', None)
@@ -193,15 +162,7 @@ class TGWCloudFormation(CloudFormation):
                 if public_private is None:
                     raise ResourceDriverError(f'Missing public_private property for operation createtgwroutetableassociation on resource {resource_id}')
 
-            is_primary = resource_properties.get('primary', None)
-            if is_primary is None:
-                is_primary = request_properties.get('primary', None)
-            logger.info(f'createtgwroutetableassociation1 subnet_id = {subnet_id}, public_private = {public_private}, is_primary = {is_primary}')
-
-            is_primary = self.__as_boolean(is_primary)
-
-            logger.info(f'createtgwroutetableassociation2 subnet_id = {subnet_id}, public_private = {public_private}, is_primary = {is_primary}')
-            logger.info(f'finally resourece properties looks like ::::::{resource_properties}')
+            logger.info(f'createtgwroutetableassociation subnet_id = {subnet_id}, public_private = {public_private}, is_primary = {is_primary}')
             resource_name = self.__create_tgwroutetableassociation_resource_name(system_properties, resource_properties, self.get_resource_name(system_properties))
             stack_name = self.get_stack_name(resource_id, resource_name)
 
@@ -219,10 +180,10 @@ class TGWCloudFormation(CloudFormation):
                     raise ResourceDriverError('Failed to create cloudformation stack on AWS')
 
                  # use the name request_id for any operation of this type against a vpc
-                request_id = build_request_id(CREATE_REQUEST_PREFIX, stack_name)
+                # request_id = build_request_id(CREATE_REQUEST_PREFIX, stack_name)
 
                 associated_topology.add_stack_id(resource_name, stack_id)
-                logger.info(f'completed creation of tgw route table association for resourece :: {resource_id} and resource_prop as :: {resource_properties}')
+                # logger.info(f'completed creation of tgw route table association for resourece :: {resource_id} and resource_prop as :: {resource_properties}')
             else:
                 # TODO hacky wait ensure non-primary (private) subnets wait for primary subnet to create the stack
                 # This is to address an issue in CP4NA/Daytona which results in the primary vpc assembly SubnetToTgwRoute operations triggering
@@ -230,10 +191,31 @@ class TGWCloudFormation(CloudFormation):
                 # they are triggering whenn one of the TGWVPCAttachment operations completes)
                 # A better way to handle this might be to allow all these calls to proceed to creating a stack, and in the get_lifecycle_execution
                 # method translate the specific failure relating to a duplicate in to a successful operation result.
-                sleepseconds(8)
-                request_id = build_request_id(CREATE_REQUEST_PREFIX, 'SKIP')
+                sleepseconds(25)
+                # request_id = build_request_id(CREATE_REQUEST_PREFIX, 'SKIP')
 
+        request_id = build_request_id(CREATE_REQUEST_PREFIX, stack_name)
+        logger.info(f'completed creation of tgw route table association for resourece :: {resource_id} and resource_prop as :: {resource_properties}')
         return LifecycleExecuteResponse(request_id, associated_topology=associated_topology)
+
+    def get_aws_vpc_attach(self, aws_location, tgw_id, vpc_id):
+        tgw_vpc_attach = aws_location.ec2.describe_transit_gateway_vpc_attachments(
+                                    Filters=[
+                                        {
+                                            'Name': 'transit-gateway-id',
+                                            'Values': [
+                                                tgw_id,
+                                            ]
+                                        },
+                                        {
+                                            'Name': 'vpc-id',
+                                            'Values': [
+                                                vpc_id,
+                                            ]
+                                        },
+                                    ],
+                                )
+        return tgw_vpc_attach
 
     def removetgwroutetableassociation(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
         self.__create_tgwroutetableassociation_resource_name(system_properties, resource_properties, self.get_resource_name(system_properties))
@@ -243,7 +225,7 @@ class TGWCloudFormation(CloudFormation):
         vpc_id = resource_properties.get('vpc_id', None)
         if vpc_id is None:
             raise ResourceDriverError(f'vpc_id cannot be null for operation createtgwroutetableassociation for resource {resource_name}')
-        system_properties['resourceName'] = self.sanitize_name(vpc_id, '__', resource_properties.get('subnet_id', ''),'_tgwrta')
+        system_properties['resourceName'] = self.sanitize_name(vpc_id,'_tgwrta')
         return system_properties['resourceName']
 
     def addtgwroute(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
