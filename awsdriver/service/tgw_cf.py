@@ -92,11 +92,11 @@ class TGWCloudFormation(CloudFormation):
         is_primary = self.__as_boolean(is_primary)
 
         #for subnet index != 0 , wait for other subnet to complete attachment in order
+        tgw_id =  resource_properties['transit_gateway_id']
+        vpc_id =  resource_properties['vpc_id']
         if subnet_index > 0 and is_primary:
             logger.info(f'Multiple availablity zone found, attaching primary subnet from other zone')
             wait_for_prior_subnet = True
-            tgw_id =  resource_properties['transit_gateway_id']
-            vpc_id =  resource_properties['vpc_id']
             while(wait_for_prior_subnet):
                 tgw_vpc_attach_resp = self.get_aws_vpc_attach(aws_location, tgw_id, vpc_id)
 
@@ -191,7 +191,25 @@ class TGWCloudFormation(CloudFormation):
                 # they are triggering whenn one of the TGWVPCAttachment operations completes)
                 # A better way to handle this might be to allow all these calls to proceed to creating a stack, and in the get_lifecycle_execution
                 # method translate the specific failure relating to a duplicate in to a successful operation result.
-                sleepseconds(25)
+                wait_for_primary_subnet = True
+                while(wait_for_primary_subnet):
+                    logger.info(f'Non primary subnet waiting for primary subnet to finish')
+                    tgw_vpc_attach_resp = self.get_aws_vpc_attach(aws_location, tgw_id, vpc_id)
+
+                    if tgw_vpc_attach_resp is not None:
+                        tgw_vpc_attach_list = tgw_vpc_attach_resp['TransitGatewayVpcAttachments']
+                        if len(tgw_vpc_attach_list) == 0:
+                            sleepseconds(30)
+                            continue
+                        tgw_vpc_attach = tgw_vpc_attach_list[0]
+                        if str(tgw_vpc_attach["State"]) != 'available' :
+                            sleepseconds(30)
+                            continue
+                        else:
+                            wait_for_primary_subnet = False
+                    else:
+                        sleepseconds(30)
+                logger.info(f'Non primary subnet waiting completed for primary subnet to finish')
                 # request_id = build_request_id(CREATE_REQUEST_PREFIX, 'SKIP')
 
         request_id = build_request_id(CREATE_REQUEST_PREFIX, stack_name)
