@@ -42,9 +42,12 @@ class VPCCloudFormation(CloudFormation):
                             input_publicKeyValue = resource_properties.get('ssh_pub_key_value', None)
                             #check if key exists with same name but content is diff, cll aws so as to throw existing key error
                             #If key and public key value are same, ignore and continue with vpc creatino.
-                            if existing_public_key != input_publicKeyValue:
-                                logger.error("Key alreday exist with different value and cannot be overwritten , please provide valid key")
-                                raise ResourceDriverError("Key alreday exist with different value and cannot be overwritten , please provide valid key")
+                            if input_publicKeyValue is not None and existing_public_key is not None:
+                                #aws return key with key name, split on space and 
+                                existing_public_key_val = " ".join(existing_public_key.split(" ", 2)[:2])
+                                if  existing_public_key_val != input_publicKeyValue:
+                                    logger.error("Key alreday exist with different value and cannot be overwritten , please provide valid key")
+                                    raise ResourceDriverError("Key alreday exist with different value and cannot be overwritten , please provide valid key")
                     except Exception as key_resp:
                         if "InvalidKeyPair.NotFound" in str(key_resp):
                                 self.import_new_key_pair(resource_properties, aws_location, input_key_name)
