@@ -8,7 +8,7 @@ from awsdriver.model.exceptions import *
 from awsdriver.service.cloudformation import *
 from awsdriver.service.topology import AWSAssociatedTopology
 from awsdriver.service.tgw_cf import  AWS_TRANSIT_GATEWAY_AVAILABLE_STATUS, AWS_TRANSIT_GATEWAY_PENDING_STATUS
-from awsdriver.service.tgw_cf import wai
+
 import time
 
 
