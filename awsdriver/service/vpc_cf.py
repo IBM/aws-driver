@@ -1,5 +1,4 @@
 from ast import Not
-from typing_extensions import Self
 from awsdriver.service.common import CREATE_REQUEST_PREFIX, build_request_id
 from ignition.model.lifecycle import LifecycleExecuteResponse
 from ignition.service.resourcedriver import ResourceDriverError
