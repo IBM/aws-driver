@@ -11,6 +11,9 @@ from awsdriver.model.exceptions import *
 from awsdriver.service.cloudformation import *
 from awsdriver.service.topology import AWSAssociatedTopology
 
+AWS_TRANSIT_GATEWAY_AVAILABLE_STATUS = 'available'
+AWS_TRANSIT_GATEWAY_PENDING_STATUS = 'pending'
+
 
 logger = logging.getLogger(__name__)
 
@@ -442,3 +445,6 @@ class TGWCloudFormation(CloudFormation):
                 return False
         else:
             return False
+        
+    
+    
