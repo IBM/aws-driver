@@ -1,12 +1,12 @@
 from ast import Not
-from awsdriver.service.common import CREATE_REQUEST_PREFIX, build_request_id
+from awsdriver.service.common import CREATE_REQUEST_PREFIX, build_request_id, FILTER_NAME_TAG_CREATOR, FILTER_VALUE_TAG_CREATOR
 from ignition.model.lifecycle import LifecycleExecuteResponse
 from ignition.service.resourcedriver import ResourceDriverError
 from awsdriver.location import *
 from awsdriver.model.exceptions import *
 from awsdriver.service.cloudformation import *
 from awsdriver.service.topology import AWSAssociatedTopology
-from awsdriver.service.tgw_cf import  AWS_TRANSIT_GATEWAY_AVAILABLE_STATUS, AWS_TRANSIT_GATEWAY_PENDING_STATUS
+from awsdriver.service.tgw_cf import  AWS_TRANSIT_GATEWAY_AVAILABLE_STATUS, AWS_TRANSIT_GATEWAY_PENDING_STATUS, MAX_TGW_CHECK_TIMEOUT
 
 import time
 
@@ -107,13 +107,14 @@ class VPCCloudFormation(CloudFormation):
         return system_properties['resourceName']
     
     def __get_transitgateway_id(self, aws_client):
+        '''Gets the Transit Gateway ID which is in Pending or available state'''
         transit_gateway_id = None
         transit_gateways = aws_client.ec2.describe_transit_gateways(
                                     Filters=[
                                         {
-                                            'Name': 'tag:Creator',
+                                            'Name': FILTER_NAME_TAG_CREATOR,
                                             'Values': [
-                                                'cp4na',
+                                                FILTER_VALUE_TAG_CREATOR,
                                             ]
                                         }
                                     ])
@@ -127,13 +128,12 @@ class VPCCloudFormation(CloudFormation):
             
         
     def __wait_for_transitgateway_availability(self, aws_client):
-        max_tgw_check_timeout = 160 
+        '''Wait for the Transit Gatway to be available in the required AWS'''
         transit_gateway_id = None
-        cloudformation_driver = aws_client.cloudformation_driver
         startTime = time.time()    
         while True:
             transit_gateway_id = self.__get_transitgateway_id(aws_client)
-            if time.time()-startTime >= max_tgw_check_timeout:
+            if time.time()-startTime >= MAX_TGW_CHECK_TIMEOUT:
                 raise ResourceDriverError(f'Timeout waiting for the Transit Gateway availability')
             if  transit_gateway_id is None:
                 logger.debug('waiting for 2 seconds to check for the Transit Gateway availability')
@@ -141,9 +141,9 @@ class VPCCloudFormation(CloudFormation):
             transit_gateways = aws_client.ec2.describe_transit_gateways(
                                     Filters=[
                                         {
-                                            'Name': 'tag:Creator',
+                                            'Name': FILTER_NAME_TAG_CREATOR,
                                             'Values': [
-                                                'cp4na',
+                                                FILTER_VALUE_TAG_CREATOR,
                                             ]
                                         },
                                         {
