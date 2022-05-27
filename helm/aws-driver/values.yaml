@@ -33,8 +33,8 @@ app:
       ## WSGI_CONTAINER can be uwsgi or gunicorn
       WSGI_CONTAINER: gunicorn
       ## the number of processes and threads to spawn to handle requests
-      NUM_PROCESSES: "4"
-      NUM_THREADS: "2"
+      NUM_PROCESSES: "9"
+      NUM_THREADS: "8"
 
     ## default_config.yml (driver configuration) overrides
     override:
@@ -104,13 +104,13 @@ app:
   ## Configure resource requests and limits for each container of the application
   ## Default is to have no limit
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  resources: {}
-    # limits:
-    #  cpu: 250m
-    #  memory: 384Mi
-    # requests:
-    #  cpu: 250m
-    #  memory: 384Mi
+  resources: 
+    limits:
+      cpu: 2
+      memory: 2Gi
+    requests:
+      cpu: 2
+      memory: 1Gi
 
   ## Autoscaler
   ## Enabling this deploys a Horizontal Pod Autoscaler that will monitor the CPU usage and scale this deployment 
