@@ -130,12 +130,14 @@ class VPCCloudFormation(CloudFormation):
     def __wait_for_transitgateway_availability(self, aws_client):
         '''Wait for the Transit Gatway to be available in the required AWS'''
         transit_gateway_id = None
-        startTime = time.time()    
+        startTime = time.time() 
+        
         while True:
-            transit_gateway_id = self.__get_transitgateway_id(aws_client)
             if time.time()-startTime >= MAX_TGW_CHECK_TIMEOUT:
                 raise ResourceDriverError(f'Timeout waiting for the Transit Gateway availability')
             if  transit_gateway_id is None:
+                transit_gateway_id = self.__get_transitgateway_id(aws_client)
+                time.sleep(2)
                 logger.debug('waiting for 2 seconds to check for the Transit Gateway availability')
                 continue
             transit_gateways = aws_client.ec2.describe_transit_gateways(

@@ -13,7 +13,7 @@ from awsdriver.service.topology import AWSAssociatedTopology
 
 AWS_TRANSIT_GATEWAY_AVAILABLE_STATUS = 'available'
 AWS_TRANSIT_GATEWAY_PENDING_STATUS = 'pending'
-MAX_TGW_CHECK_TIMEOUT = 300
+MAX_TGW_CHECK_TIMEOUT = 300 
 
 
 logger = logging.getLogger(__name__)
