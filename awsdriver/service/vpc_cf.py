@@ -120,8 +120,8 @@ class VPCCloudFormation(CloudFormation):
                                     ])
         for tgw in transit_gateways['TransitGateways']:
             if tgw['State'] not in  [AWS_TGW_DELETING_STATUS, AWS_TGW_DELETED_STATUS]:
-                
                 transit_gateway_id = tgw['TransitGatewayId']
+                logger.debug(f'Got the TGW with id {transit_gateway_id} which is in {tgw["State"]}')
                 break
         return transit_gateway_id
             
@@ -157,6 +157,7 @@ class VPCCloudFormation(CloudFormation):
                                     ])
             transit_gateway = transit_gateways['TransitGateways'][0]
             if transit_gateway['State'] == AWS_TGW_AVAILABLE_STATUS:
+                logger.debug('TGW with id {transit_gateway_id} is in available state')
                 break
             else:
                 time.sleep(10)
