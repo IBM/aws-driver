@@ -6,7 +6,7 @@ from awsdriver.location import *
 from awsdriver.model.exceptions import *
 from awsdriver.service.cloudformation import *
 from awsdriver.service.topology import AWSAssociatedTopology
-from awsdriver.service.tgw_cf import  AWS_TRANSIT_GATEWAY_AVAILABLE_STATUS, AWS_TRANSIT_GATEWAY_PENDING_STATUS, MAX_TGW_CHECK_TIMEOUT
+from awsdriver.service.tgw_cf import  AWS_TGW_DELETING_STATUS, AWS_TGW_DELETED_STATUS, AWS_TGW_AVAILABLE_STATUS, MAX_TGW_CHECK_TIMEOUT
 
 import time
 
@@ -71,9 +71,9 @@ class VPCCloudFormation(CloudFormation):
             logger.debug(f'stack_name={stack_name} cf_template={cf_template} cf_parameters={cf_parameters}')
 
             try:
+                self.__wait_for_transitgateway_availability(aws_location)
                 stack_id = cloudformation_driver.create_stack(stack_name, cf_template, cf_parameters)
                 logger.debug(f'Created Stack Id: {stack_id}')
-                self.__wait_for_transitgateway_availability(aws_location)
             except Exception as e:
                 raise ResourceDriverError(str(e)) from e
 
@@ -119,7 +119,7 @@ class VPCCloudFormation(CloudFormation):
                                         }
                                     ])
         for tgw in transit_gateways['TransitGateways']:
-            if tgw['State'] in  [AWS_TRANSIT_GATEWAY_AVAILABLE_STATUS, AWS_TRANSIT_GATEWAY_PENDING_STATUS]:
+            if tgw['State'] not in  [AWS_TGW_DELETING_STATUS, AWS_TGW_DELETED_STATUS]:
                 
                 transit_gateway_id = tgw['TransitGatewayId']
                 break
@@ -156,7 +156,7 @@ class VPCCloudFormation(CloudFormation):
                                         },
                                     ])
             transit_gateway = transit_gateways['TransitGateways'][0]
-            if transit_gateway['State'] == AWS_TRANSIT_GATEWAY_AVAILABLE_STATUS:
+            if transit_gateway['State'] == AWS_TGW_AVAILABLE_STATUS:
                 break
             else:
                 time.sleep(10)

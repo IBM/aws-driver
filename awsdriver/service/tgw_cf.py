@@ -11,8 +11,9 @@ from awsdriver.model.exceptions import *
 from awsdriver.service.cloudformation import *
 from awsdriver.service.topology import AWSAssociatedTopology
 
-AWS_TRANSIT_GATEWAY_AVAILABLE_STATUS = 'available'
-AWS_TRANSIT_GATEWAY_PENDING_STATUS = 'pending'
+AWS_TGW_AVAILABLE_STATUS = 'available'
+AWS_TGW_DELETING_STATUS = 'deleting'
+AWS_TGW_DELETED_STATUS = 'deleted'
 MAX_TGW_CHECK_TIMEOUT = 300 
 
 
