@@ -47,7 +47,7 @@ The AWS driver expects an `AWS` deployment location with the following propertie
 
    ### 1. By increasing no of processes and threads
 
-      With Gunicorn support, aws-driver can handle huge traffic by configuring no of processes and threads to the helm install command as below
+      Configure with helm install command as below
 
       ```
          helm install aws-driver aws-driver-0.0.2.tgz --set docker.image=aws-driver--set docker.version=0.0.2 --set app.config.env.NUM_PROCESSES=<processes> --set --set app.config.env.NUM_THREADS=<threads> --set resources.requests.cpu=2*<processes>+1  --set resources.limits.cpu=2<processes>+1 -n <namespace>
