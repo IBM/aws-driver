@@ -11,6 +11,11 @@ from awsdriver.model.exceptions import *
 from awsdriver.service.cloudformation import *
 from awsdriver.service.topology import AWSAssociatedTopology
 
+AWS_TGW_AVAILABLE_STATUS = 'available'
+AWS_TGW_DELETING_STATUS = 'deleting'
+AWS_TGW_DELETED_STATUS = 'deleted'
+MAX_TGW_CHECK_TIMEOUT = 300 
+
 
 logger = logging.getLogger(__name__)
 
@@ -442,3 +447,6 @@ class TGWCloudFormation(CloudFormation):
                 return False
         else:
             return False
+        
+    
+    

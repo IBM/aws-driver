@@ -1,11 +1,14 @@
 from ast import Not
-from awsdriver.service.common import CREATE_REQUEST_PREFIX, build_request_id
+from awsdriver.service.common import CREATE_REQUEST_PREFIX, build_request_id, FILTER_NAME_TAG_CREATOR, FILTER_VALUE_TAG_CREATOR
 from ignition.model.lifecycle import LifecycleExecuteResponse
 from ignition.service.resourcedriver import ResourceDriverError
 from awsdriver.location import *
 from awsdriver.model.exceptions import *
 from awsdriver.service.cloudformation import *
 from awsdriver.service.topology import AWSAssociatedTopology
+from awsdriver.service.tgw_cf import  AWS_TGW_DELETING_STATUS, AWS_TGW_DELETED_STATUS, AWS_TGW_AVAILABLE_STATUS, MAX_TGW_CHECK_TIMEOUT
+
+import time
 
 
 logger = logging.getLogger(__name__)
@@ -68,6 +71,7 @@ class VPCCloudFormation(CloudFormation):
             logger.debug(f'stack_name={stack_name} cf_template={cf_template} cf_parameters={cf_parameters}')
 
             try:
+                self.__wait_for_transitgateway_availability(aws_location)
                 stack_id = cloudformation_driver.create_stack(stack_name, cf_template, cf_parameters)
                 logger.debug(f'Created Stack Id: {stack_id}')
             except Exception as e:
@@ -75,6 +79,7 @@ class VPCCloudFormation(CloudFormation):
 
             if stack_id is None:
                 raise ResourceDriverError('Failed to create cloudformation stack on AWS')
+
 
         request_id = build_request_id(CREATE_REQUEST_PREFIX, stack_id)
         associated_topology = AWSAssociatedTopology()
@@ -100,3 +105,63 @@ class VPCCloudFormation(CloudFormation):
     def __create_resource_name(self, system_properties, resource_properties, resource_name):
         system_properties['resourceName'] = self.get_resource_name(system_properties)
         return system_properties['resourceName']
+    
+    def __get_transitgateway_id(self, aws_client):
+        '''Gets the Transit Gateway ID which is in Pending or available state'''
+        transit_gateway_id = None
+        transit_gateways = aws_client.ec2.describe_transit_gateways(
+                                    Filters=[
+                                        {
+                                            'Name': FILTER_NAME_TAG_CREATOR,
+                                            'Values': [
+                                                FILTER_VALUE_TAG_CREATOR,
+                                            ]
+                                        }
+                                    ])
+        for tgw in transit_gateways['TransitGateways']:
+            if tgw['State'] not in  [AWS_TGW_DELETING_STATUS, AWS_TGW_DELETED_STATUS]:
+                transit_gateway_id = tgw['TransitGatewayId']
+                logger.debug(f'Got the TGW with id {transit_gateway_id} which is in {tgw["State"]}')
+                break
+        return transit_gateway_id
+            
+            
+        
+    def __wait_for_transitgateway_availability(self, aws_client):
+        '''Wait for the Transit Gatway to be available in the required AWS'''
+        transit_gateway_id = None
+        startTime = time.time() 
+        
+        while True:
+            if time.time()-startTime >= MAX_TGW_CHECK_TIMEOUT:
+                raise ResourceDriverError(f'Timeout waiting for the Transit Gateway availability')
+            if  transit_gateway_id is None:
+                transit_gateway_id = self.__get_transitgateway_id(aws_client)
+                time.sleep(2)
+                logger.debug('waiting for 2 seconds to check for the Transit Gateway availability')
+                continue
+            transit_gateways = aws_client.ec2.describe_transit_gateways(
+                                    Filters=[
+                                        {
+                                            'Name': FILTER_NAME_TAG_CREATOR,
+                                            'Values': [
+                                                FILTER_VALUE_TAG_CREATOR,
+                                            ]
+                                        },
+                                        {
+                                            'Name': 'transit-gateway-id',
+                                            'Values': [
+                                                transit_gateway_id,
+                                            ]
+                                        },
+                                    ])
+            transit_gateway = transit_gateways['TransitGateways'][0]
+            if transit_gateway['State'] == AWS_TGW_AVAILABLE_STATUS:
+                logger.debug('TGW with id {transit_gateway_id} is in available state')
+                break
+            else:
+                time.sleep(10)
+                logger.debug('waiting for 10 seconds to check for the Transit Gateway availability')
+                continue
+                  
+    

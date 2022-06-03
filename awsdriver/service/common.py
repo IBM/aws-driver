@@ -6,6 +6,9 @@ from ignition.utils.propvaluemap import PropValueMap
 CREATE_REQUEST_PREFIX = 'Create'
 DELETE_REQUEST_PREFIX = 'Delete'
 
+FILTER_NAME_TAG_CREATOR = 'tag:Creator'
+FILTER_VALUE_TAG_CREATOR = 'cp4na'
+
 REQUEST_ID_SEPARATOR = '::'
 
 def build_request_id(request_type, stack_id):
