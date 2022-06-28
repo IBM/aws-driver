@@ -17,6 +17,7 @@ from .subnet_cf import *
 from .tgw_cf import *
 from .igw_cf import *
 from .route_table_cf import *
+from .vce_cf import *
 from .tgw_peer_attach_cf import *
 
 
@@ -65,6 +66,7 @@ class ResourceDriverHandler(Service, ResourceDriverHandlerCapability):
             'resource::AWSRouteTable::1.0': RouteTableCloudFormation(),
             'resource::AWSTransitGateway::1.0': TGWCloudFormation(),
             'resource::AWSInternetGateway::1.0': IGWCloudFormation(),
+            'resource::AWSVCE::1.0': VCECloudFormation(),
             'resource::AWSTransitGatewayPeerAttachment::1.0': TGWPACloudFormation(),
         }
 
@@ -183,6 +185,8 @@ class ResourceDriverHandler(Service, ResourceDriverHandlerCapability):
             key = 'route_table_id'
         elif key == 'TGWID':
             key = 'transit_gateway_id'
+        elif key == 'VCEID':
+            key = 'vce_id'
         elif key == 'TGWRTID':
             key = 'transit_route_table_id'
         elif key == 'TGWPAID':
