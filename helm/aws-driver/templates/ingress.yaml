@@ -1,6 +1,6 @@
 {{- if .Values.ingress.enabled }}
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
@@ -12,7 +12,10 @@ spec:
     http:
       paths:
       - path: /  # This is the url path used to access the service externally.
+        pathType: ImplementationSpecific
         backend:
-         serviceName: aws-driver
-         servicePort: 7276
+         service:
+           name: aws-driver
+           port: 
+             number: 7276
 {{- end }}

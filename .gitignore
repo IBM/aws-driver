@@ -1,0 +1,7 @@
+
+build/*
+awsdriver.egg-info/SOURCES.txt
+awsdriver.egg-info/PKG-INFO
+dist/*
+docker/whls/*
+helm/.DS_Store
