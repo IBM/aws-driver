@@ -124,7 +124,7 @@ app:
 
 service:
   # Using NodePort allows access to the IPs through http://k8s-host:nodePort/
-  type: NodePort
+  type: ClusterIP
   nodePort: 30259
 
 ingress:
@@ -134,3 +134,6 @@ ingress:
   ## E.g.
   ## 10.220.1.2     aws-driver.lm
   host: aws-driver.lm
+
+route:
+  enabled: true
