@@ -90,10 +90,13 @@ class RouteTableCloudFormation(CloudFormation):
 
     def __create_route_resource_name(self, system_properties, resource_properties, resource_name):
         igw_id = resource_properties.get('igw_id', '')
+        route_cidr_block = resource_properties.get('route_cidr_block')
         transit_gateway_id = resource_properties.get('transit_gateway_id', None)
 
         if igw_id is not None:
             resource_name = f'{resource_name}__{igw_id}'
+            if route_cidr_block is not None:
+               resource_name = f'{route_cidr_block.replace(".", "-")}__{resource_name}'
         elif transit_gateway_id is not None:
             resource_name = f'{resource_name}__{transit_gateway_id}'
         system_properties['resourceName'] = self.sanitize_name(resource_name, '__route')
