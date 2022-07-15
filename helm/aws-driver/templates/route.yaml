@@ -1,0 +1,16 @@
+{{- if .Values.route.enabled }}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: aws-driver  # The route name must be unique.
+spec:
+  to:
+    kind: Service
+    name: aws-driver
+  port:
+    targetPort: 7276
+  tls:
+    termination: passthrough
+    insecureEdgeTerminationPolicy: Redirect
+{{- end }}
