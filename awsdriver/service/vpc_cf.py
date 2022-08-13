@@ -71,7 +71,7 @@ class VPCCloudFormation(CloudFormation):
             logger.debug(f'stack_name={stack_name} cf_template={cf_template} cf_parameters={cf_parameters}')
 
             try:
-                self.__wait_for_transitgateway_availability(aws_location)
+                self.__wait_for_transitgateway_route_availability(aws_location, resource_properties)
                 stack_id = cloudformation_driver.create_stack(stack_name, cf_template, cf_parameters)
                 logger.debug(f'Created Stack Id: {stack_id}')
             except Exception as e:
@@ -106,62 +106,64 @@ class VPCCloudFormation(CloudFormation):
         system_properties['resourceName'] = self.get_resource_name(system_properties)
         return system_properties['resourceName']
     
-    def __get_transitgateway_id(self, aws_client):
-        '''Gets the Transit Gateway ID which is in Pending or available state'''
-        transit_gateway_id = None
-        transit_gateways = aws_client.ec2.describe_transit_gateways(
+    def __get_transitgateway_routetable_id(self, aws_client, resource_properties):
+        '''Gets the Transit Gateway Route Table ID which is in Pending or available state'''
+        transit_gateway_routetable_id = None
+        tgw_route_table_tag_value = resource_properties.get('transit_gateway_name', None)
+        transit_gateways_route_table = aws_client.ec2.describe_transit_gateway_route_tables(
                                     Filters=[
                                         {
-                                            'Name': FILTER_NAME_TAG_CREATOR,
+                                            'Name': FILTER_NAME_TGW_ROUTE_TAG,
                                             'Values': [
-                                                FILTER_VALUE_TAG_CREATOR,
+                                                tgw_route_table_tag_value,
                                             ]
                                         }
                                     ])
-        for tgw in transit_gateways['TransitGateways']:
-            if tgw['State'] not in  [AWS_TGW_DELETING_STATUS, AWS_TGW_DELETED_STATUS]:
-                transit_gateway_id = tgw['TransitGatewayId']
-                logger.debug(f'Got the TGW with id {transit_gateway_id} which is in {tgw["State"]}')
+        for tgw_rt in transit_gateways_route_table['TransitGatewayRouteTables']:
+            if tgw_rt['State'] not in  [AWS_TGW_DELETING_STATUS, AWS_TGW_DELETED_STATUS]:
+                transit_gateway_routetable_id = tgw_rt['TransitGatewayRouteTableId']
+                logger.debug(f'Got the TGW route table with id {transit_gateway_routetable_id} which is in {tgw_rt["State"]}')
                 break
-        return transit_gateway_id
+        return transit_gateway_routetable_id
             
             
         
-    def __wait_for_transitgateway_availability(self, aws_client):
-        '''Wait for the Transit Gatway to be available in the required AWS'''
-        transit_gateway_id = None
+    def __wait_for_transitgateway_route_availability(self, aws_client, resource_properties):
+        '''Wait for the Transit Gatway route table to be available in the required AWS'''
+        transit_gateway_routetable_id = None
+        tgw_route_table_tag_value = resource_properties.get('transit_gateway_name', None)
         startTime = time.time() 
         
         while True:
             if time.time()-startTime >= MAX_TGW_CHECK_TIMEOUT:
-                raise ResourceDriverError(f'Timeout waiting for the Transit Gateway availability')
-            if  transit_gateway_id is None:
-                transit_gateway_id = self.__get_transitgateway_id(aws_client)
+                raise ResourceDriverError(f'Timeout waiting for the Transit Gateway route table availability')
+            if  transit_gateway_routetable_id is None:
+                transit_gateway_routetable_id = self.__get_transitgateway_routetable_id(aws_client, resource_properties)
                 time.sleep(2)
-                logger.debug('waiting for 2 seconds to check for the Transit Gateway availability')
+                logger.debug('waiting for 2 seconds to check for the Transit Gateway route table availability')
                 continue
-            transit_gateways = aws_client.ec2.describe_transit_gateways(
+            transit_gateways_rtbs = aws_client.ec2.describe_transit_gateway_route_tables(
                                     Filters=[
                                         {
-                                            'Name': FILTER_NAME_TAG_CREATOR,
+                                            'Name': FILTER_NAME_TGW_ROUTE_TAG,
                                             'Values': [
-                                                FILTER_VALUE_TAG_CREATOR,
+                                                tgw_route_table_tag_value,
                                             ]
                                         },
                                         {
-                                            'Name': 'transit-gateway-id',
+                                            'Name': 'transit-gateway-route-table-id',
                                             'Values': [
-                                                transit_gateway_id,
+                                                transit_gateway_routetable_id,
                                             ]
                                         },
                                     ])
-            transit_gateway = transit_gateways['TransitGateways'][0]
-            if transit_gateway['State'] == AWS_TGW_AVAILABLE_STATUS:
-                logger.debug('TGW with id {transit_gateway_id} is in available state')
+            transit_gateways_rtb = transit_gateways_rtbs['TransitGatewayRouteTables'][0]
+            if transit_gateways_rtb['State'] == AWS_TGW_AVAILABLE_STATUS:
+                logger.debug(f'TGW with id {transit_gateway_routetable_id} is in available state')
                 break
             else:
                 time.sleep(10)
-                logger.debug('waiting for 10 seconds to check for the Transit Gateway availability')
+                logger.debug('waiting for 10 seconds to check for the Transit Gateway route table availability')
                 continue
                   
     
