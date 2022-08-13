@@ -74,6 +74,8 @@ class VPCCloudFormation(CloudFormation):
                 self.__wait_for_transitgateway_route_availability(aws_location, resource_properties)
                 stack_id = cloudformation_driver.create_stack(stack_name, cf_template, cf_parameters)
                 logger.debug(f'Created Stack Id: {stack_id}')
+                logger.debug(f'wait blindly for 30 sec for tgw completion')
+                time.sleep(30)
             except Exception as e:
                 raise ResourceDriverError(str(e)) from e
 
