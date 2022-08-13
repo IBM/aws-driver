@@ -36,6 +36,8 @@ Resources:
       Tags:
         - Key: Creator
           Value: cp4na
+        - Key: TGWName
+          Value: {{ transit_gateway_name }}
       TransitGatewayId: !Ref TransitGateway
 
 Outputs:
