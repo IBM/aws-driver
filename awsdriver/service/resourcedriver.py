@@ -161,15 +161,17 @@ class ResourceDriverHandler(Service, ResourceDriverHandlerCapability):
         else:
             status = self.__determine_delete_status(request_id, stack_id, stack_status)
         if status == STATUS_FAILED:
-            description = cloudformation_driver.get_stack_failure(stack_id)
+            description = cloudformation_driver.get_stack_failure(request_type, stack_id)
             failure_details = FailureDetails(FAILURE_CODE_INFRASTRUCTURE_ERROR, description)
+            logger.debug(f'Stack Failure Details: {failure_details}')
         outputs = None
+        
         if request_type == CREATE_REQUEST_PREFIX:
             outputs_from_stack = stack.get('Outputs', [])
             outputs = self.__translate_outputs_to_values_dict(outputs_from_stack)
 
         logger.info(f'request_id {request_id} stack: {stack} outputs: {outputs}')
-
+        
         return LifecycleExecution(request_id, status, failure_details=failure_details, outputs=outputs)
 
     def __change_outputs_key(self, key):
