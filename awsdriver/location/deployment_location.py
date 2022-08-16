@@ -1,4 +1,5 @@
 import logging
+from ..service.common import CREATE_REQUEST_PREFIX, DELETE_REQUEST_PREFIX
 import boto3
 import botocore
 import datetime
@@ -219,27 +220,28 @@ class CloudFormationDriver():
 
         return None
 
-    def get_stack_failure(self, want_stack_id):
+    def get_stack_failure(self, request_type, want_stack_id):
         try:
             # if self.api_calls_paused():
             #     delta = datetime.now() - self.paused_at
             #     if delta.total_seconds() > 20:
             #         self.resume_api_calls()
             #     else:
-            #         return LifecycleExecution(request_id, STATUS_IN_PROGRESS)                    
-
+            #         return LifecycleExecution(request_id, STATUS_IN_PROGRESS)    
+            state_to_check = 'CREATE_FAILED'
             response = self.client.describe_stack_events(StackName=want_stack_id)
-            stack_failed_event = [f for f in response.get('StackEvents') if f.get('ResourceStatus', None)== 'CREATE_FAILED']
+            if(request_type == DELETE_REQUEST_PREFIX):
+                state_to_check = 'DELETE_FAILED'
+            stack_failed_event = [f for f in response.get('StackEvents') if f.get('ResourceStatus', None)== state_to_check]
             if len(stack_failed_event) > 0:
-                return stack_failed_event[0]["ResourceStatusReason"]
+                failure_details = stack_failed_event[0]["ResourceStatusReason"]
             else:
-                return ''
+                failure_details = f'Failed to {request_type.lower()} resource'
         except botocore.exceptions.ClientError as ex:
             error_message = ex.response['Error']['Message']
             logging.debug(f'Failed to get AWS stack, {error_message}')
-            return error_message
-
-        return None
+            failure_details = error_message
+        return failure_details
 
     def get_stack_resources(self, want_stack_id):
         stack_name = None
