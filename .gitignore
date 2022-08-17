@@ -2,3 +2,6 @@
 build/*
 dist/*
 docker/whls/*
+awsdriver.egg-info/
+awsdriver.egg-info/PKG-INFO
+awsdriver.egg-info/SOURCES.txt
