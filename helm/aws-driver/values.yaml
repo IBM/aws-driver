@@ -8,8 +8,8 @@ global:
 ## Docker Image for the Openstack VIM Driver
 docker:
   ## Make this the full path, including registry host and port if using one
-  image: aws-driver
-  version: 0.0.1
+  image: icr.io/cp4na-drivers/aws-driver
+  version: ${version}
   imagePullPolicy: IfNotPresent
 
 ## Configuration for the application deployment
@@ -127,13 +127,13 @@ service:
   type: ClusterIP
   nodePort: 30259
 
-ingress:
-  enabled: true
-  ## The host used to access the service externally i.e. http://<server.ingress.hostname>/
-  ## If not making use of a DNS to resolve this host you must add this to the client hosts file with the K8s IP
-  ## E.g.
-  ## 10.220.1.2     aws-driver.lm
-  host: aws-driver.lm
+#ingress:
+#  enabled: true
+#  ## The host used to access the service externally i.e. http://<server.ingress.hostname>/
+#  ## If not making use of a DNS to resolve this host you must add this to the client hosts file with the K8s IP
+#  ## E.g.
+#  ## 10.220.1.2     aws-driver.lm
+#  host: aws-driver.lm
 
 route:
   enabled: true
