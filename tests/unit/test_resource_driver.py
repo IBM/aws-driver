@@ -12,10 +12,6 @@ from awsdriver.service.topology import AWSAssociatedTopology
 class TestResourceDriver(unittest.TestCase):
     def setUp(self):
         self.props_merger = PropertiesMerger()
-        self.resource_driver_properties = PropValueMap({
-            'cidr_block': '10.4.0.0/16',
-            'vpc_name': 'vpc1'
-        })
         self.templating_service = Jinja2TemplatingService()
         self.resource_context_service = ResourceTemplateContextService()
         self.resource_driver = ResourceDriverHandler(self.resource_driver_properties)
