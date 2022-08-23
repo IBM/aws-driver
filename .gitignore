@@ -2,6 +2,7 @@
 build/*
 dist/*
 docker/whls/*
+**/__pycache__/
 awsdriver.egg-info/
 awsdriver.egg-info/PKG-INFO
 awsdriver.egg-info/SOURCES.txt
