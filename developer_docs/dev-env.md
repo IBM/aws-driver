@@ -64,7 +64,7 @@ env\Scripts\activate.bat
 
 ## Install Ignition
 
-You may need a development version of [Ignition](https://github.com/IBM/ignition), (check `ansibledriver/pkg_info.json`. If `ignition-version` includes a `.devX` version, then you do). You should install the development version of Ignition into your environment before installing the driver.
+You may need a development version of [Ignition](https://github.com/IBM/ignition), (check `awsdriver/pkg_info.json`. If `ignition-version` includes a `.devX` version, then you do). You should install the development version of Ignition into your environment before installing the driver.
 
 Clone the [Ignition](https://github.com/IBM/ignition) project and install it into your virtualenv:
 

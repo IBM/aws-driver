@@ -1,11 +1,15 @@
 import unittest
+from unittest import mock
+from unittest.mock import patch
+from unittest.mock import create_autospec
 from pathlib import Path
 import uuid
 import os
 from ignition.service.templating import ResourceTemplateContextService, Jinja2TemplatingService
 from ignition.utils.propvaluemap import PropValueMap
 from awsdriver.service.resourcedriver import ResourceDriverHandler, TGWCloudFormation, PropertiesMerger
-from awsdriver.location.deployment_location import AWSDeploymentLocation
+from awsdriver.location.deployment_location import AWSDeploymentLocation, CloudFormationDriver
+
 
 
 class TestCloudFormation(unittest.TestCase):
@@ -35,8 +39,8 @@ class TestCloudFormation(unittest.TestCase):
         aws_deployment_location = AWSDeploymentLocation.from_dict({
             'name': 'dummy',
             'properties': {
-                'aws_access_key_id': 'dummy',
-                'aws_secret_access_key': 'dummy'
+                AWSDeploymentLocation.AWS_ACCESS_KEY_ID: 'dummy',
+                AWSDeploymentLocation.AWS_SECRET_ACCESS_KEY: 'dummy'
             }
         })
         tgw_cloud_formation = TGWCloudFormation()
@@ -95,7 +99,7 @@ class TestCloudFormation(unittest.TestCase):
 
         # response2 = tgw_cloud_formation.createtgwroutetableassociation(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_deployment_location)
         # print(f"response1={response2.to_dict()}")
-
+    
     def test_cloud_formation_2(self):
         aws_deployment_location = AWSDeploymentLocation.from_dict({
             'name': 'aws1',
@@ -104,8 +108,9 @@ class TestCloudFormation(unittest.TestCase):
                 AWSDeploymentLocation.AWS_SECRET_ACCESS_KEY: 'dummy'
             }
         })
-        cloudformation_driver = aws_deployment_location.cloudformation_driver
-
+        
         stack_name = 'vpc027feb89f989e3318-tgwrta-1d0ced5c-46de-4839-9d01-9bfc8f2ac82b'
+        cloudformation_driver = aws_deployment_location.cloudformation_driver
+        cloudformation_driver.get_stack = mock.Mock(return_value={'StackId', stack_name})
         stack = cloudformation_driver.get_stack(stack_name)
         print(f'Got Stack {stack}')

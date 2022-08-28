@@ -1,6 +1,6 @@
 # Releasing the Driver
 
-The following guide details the steps for releasing the Ansible Lifecycle Driver. This may only be performed by a user with admin rights to this Git repository and the `icr.io/cp4na-drivers` IBM Cloud Container Registry.
+The following guide details the steps for releasing the AWS Driver. This may only be performed by a user with admin rights to this Git repository and the `icr.io/cp4na-drivers` IBM Cloud Container Registry.
 
 **Ensure you've followed the steps in [configure your development environment](dev-env.md) as there are libraries required to complete the release.**
 
