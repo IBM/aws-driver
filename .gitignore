@@ -6,3 +6,6 @@ docker/whls/*
 awsdriver.egg-info/
 awsdriver.egg-info/PKG-INFO
 awsdriver.egg-info/SOURCES.txt
+.DS_Store
+docker/whls/.DS_Store
+release-artifacts/

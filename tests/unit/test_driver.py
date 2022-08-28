@@ -1,14 +1,16 @@
 import os
 import time
 import unittest
+from unittest import mock
 import uuid
-from unittest.mock import patch, MagicMock, ANY
+from unittest.mock import PropertyMock, patch, MagicMock, ANY
 from ignition.utils.file import DirectoryTree
 from ignition.utils.propvaluemap import PropValueMap
 from ignition.model.associated_topology import AssociatedTopology
 from awsdriver.location.deployment_location import AWSDeploymentLocation
 from awsdriver.service.cloudformation import CloudFormation
-from awsdriver.service.resourcedriver import AdditionalResourceDriverProperties, ResourceDriverHandler
+from awsdriver.service.vpc_cf import VPCCloudFormation
+from awsdriver.service.resourcedriver import AdditionalResourceDriverProperties, ResourceDriverHandler, AWS_STACK_STATUS_CREATE_COMPLETE
 
 class TestDriver(unittest.TestCase):
 
@@ -227,7 +229,7 @@ class TestDriver(unittest.TestCase):
         props['transit_id'] = {'type': 'string', 'value': 'tgw-06502eb028c110066'}
         props['transit_route_table_id'] = {'type': 'string', 'value': 'tgw-rtb-0b5895e4a2f5be275'}
         props['transit_gateway_name'] = {'type': 'string', 'value': 'tgTest'}
-        props['vpc073c193a752a9ad3aAttachment'] = {'type': 'string', 'value': 'tgw-attach-08bfecbd635408bde'}
+        props['vpc073c193a752a9ad3aTGWATTACHID'] = {'type': 'string', 'value': 'tgw-attach-08bfecbd635408bde'}
         props['subnet_id'] = {'type': 'string', 'value': 'subnet-02e1adc78a85bfcbf'}
         props['cidr_block'] = {'type': 'string', 'value': '192.0.1.0/24'}
         props['access_domain_state'] = {'type': 'string', 'value': 'global'}
@@ -258,8 +260,32 @@ class TestDriver(unittest.TestCase):
                 AWSDeploymentLocation.AWS_SECRET_ACCESS_KEY: 'dummy'
             }
         }
-
-    def test_driver_1(self):
+    
+    @patch('awsdriver.location.deployment_location.CloudFormationDriver.create_stack')
+    @patch('awsdriver.location.deployment_location.CloudFormationDriver.get_stack')
+    @patch.object(VPCCloudFormation, '_VPCCloudFormation__wait_for_transitgateway_route_availability', new_callable=PropertyMock)
+    def test_driver_create_vpc(self, mock_tgw_availability, mock_get_stack, mock_create_stack):
+        system_properties_vpc = self.__system_properties_vpc()
+        deployment_location = self.__deployment_location()
+        request_properties = self.__request_properties()
+        request_properties_vpc = self.__resource_properties_vpc()
+        
+        path = os.path.abspath(os.getcwd())
+        print(path)
+        driver_files = DirectoryTree('resources/cloudformation/')
+        print(driver_files.get_path())
+        driver = ResourceDriverHandler(resource_driver_properties=self.resource_driver_config)
+        associated_topology = AssociatedTopology()
+        mock_create_stack.return_value = 'vpc027feb89f989e3318-1d0ced5c-46de-4839-9d01-9bfc8f2ac82b'
+        mock_get_stack.return_value = {'StackName': 'dummy', 'StackId' : 'vpc027feb89f989e3318-1d0ced5c-46de-4839-9d01-9bfc8f2ac82b', 'StackStatus': AWS_STACK_STATUS_CREATE_COMPLETE}
+        create_resp = driver.execute_lifecycle('Create', driver_files, system_properties_vpc, request_properties_vpc, request_properties, associated_topology, deployment_location)
+        get_resp = driver.get_lifecycle_execution(create_resp.request_id, deployment_location)
+        self.assertEqual(create_resp.request_id, get_resp.request_id)
+    
+    
+    @patch('awsdriver.location.deployment_location.CloudFormationDriver.create_stack')
+    @patch('awsdriver.location.deployment_location.CloudFormationDriver.get_stack')
+    def test_driver_1(self, mock_get_stack, mock_create_stack):
         system_properties = self.__system_properties()
         system_properties_vpc = self.__system_properties_vpc()
         system_properties_rt = self.__system_properties_rt()
@@ -279,10 +305,16 @@ class TestDriver(unittest.TestCase):
         print(path)
         driver_files = DirectoryTree('resources/cloudformation/')
         print(driver_files.get_path())
-        driver = ResourceDriverHandler( resource_driver_config=self.resource_driver_config)
+        driver = ResourceDriverHandler(resource_driver_properties=self.resource_driver_config)
         associated_topology = AssociatedTopology()
-        #resp = driver.execute_lifecycle('Create', driver_files, system_properties_vpc, request_properties_vpc, request_properties, associated_topology, deployment_location)
-        #print(f'resp={resp.request_id}')
+        
+       # mock_create_stack.return_value = 'vpc027feb89f989e3318-1d0ced5c-46de-4839-9d01-9bfc8f2ac82b'
+       # mock_get_stack.return_value = {'StackName': 'dummy', 'StackId' : 'vpc027feb89f989e3318-1d0ced5c-46de-4839-9d01-9bfc8f2ac82b', 'StackStatus': AWS_STACK_STATUS_CREATE_COMPLETE}
+       # create_resp = driver.execute_lifecycle('Create', driver_files, system_properties_vpc, request_properties_vpc, request_properties, associated_topology, deployment_location)
+       # create_resp = driver.execute_lifecycle('addtgwroute', driver_files, system_properties_tga1, resource_properties_route, request_properties, associated_topology, deployment_location)
+       # get_resp = driver.get_lifecycle_execution(create_resp.request_id, deployment_location)
+       # self.assertEqual(create_resp.request_id, get_resp.request_id)
+        
         #resp = driver.execute_lifecycle('Create', driver_files, system_properties, resource_properties, request_properties, associated_topology, deployment_location)
         #print(f'resp={resp.request_id}')
         #resp = driver.execute_lifecycle('Create', driver_files, system_properties_rt, request_properties_rt, request_properties, associated_topology, deployment_location)
@@ -293,8 +325,13 @@ class TestDriver(unittest.TestCase):
         #print(f'resp={resp}')
         #resp = driver.execute_lifecycle('CreateTgwRouteTableAssociation', driver_files, system_properties_tga1, request_properties_tga1, request_properties, associated_topology, deployment_location)
         #print(f'resp={resp}')
-        resp = driver.execute_lifecycle('addtgwroute', driver_files, system_properties_tga1, resource_properties_route, request_properties, associated_topology, deployment_location)
-        print(f'resp={resp}')
-        time.sleep(50)
-        resp = driver.get_lifecycle_execution(resp.request_id, deployment_location)
-        print(f'response {resp}')
+        mock_create_stack.return_value = 'tgw027feb89f989e3318-tgwrta-1d0ced5c-46de-4839-9d01-9bfc8f2ac82b'
+        mock_get_stack.return_value = {'StackName': 'dummy', 'StackId' : 'tgw027feb89f989e3318-tgwrta-1d0ced5c-46de-4839-9d01-9bfc8f2ac82b', 'StackStatus': AWS_STACK_STATUS_CREATE_COMPLETE}
+        create_resp = driver.execute_lifecycle('addtgwroute', driver_files, system_properties_tga1, resource_properties_route, request_properties, associated_topology, deployment_location)
+        print(f'resp={create_resp}')
+        print(f'requestId={create_resp.request_id}')
+        get_resp = driver.get_lifecycle_execution(create_resp.request_id, deployment_location)
+        print(f'resp={get_resp}')
+        print(f'requestId={get_resp.request_id}')
+        self.assertEqual(create_resp.request_id, get_resp.request_id)
+      
