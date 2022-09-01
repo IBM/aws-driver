@@ -14,3 +14,6 @@ class AWSAssociatedTopology(AssociatedTopology):
             return entry.to_dict()['id']
         else:
             return None
+
+    def remove_stack_id(self, resource_name):
+        self.add_removed(resource_name)

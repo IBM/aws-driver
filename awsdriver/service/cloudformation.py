@@ -126,5 +126,6 @@ class CloudFormation():
             # nothing to do
             logger.info(f'No stack_id in associated topology for resource with id: {resource_id} name: {resource_name} lifecycle_name: {lifecycle_name}')
             request_id = build_request_id(CREATE_REQUEST_PREFIX, 'SKIP')
-
-        return LifecycleExecuteResponse(request_id)
+        #add topology to remove the stack during uninstall from internal table
+        associated_topology.remove_stack_id(resource_name)
+        return LifecycleExecuteResponse(request_id, associated_topology)
