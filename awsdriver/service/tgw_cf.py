@@ -273,12 +273,12 @@ class TGWCloudFormation(CloudFormation):
                 if vpc_id is None:
                     raise ResourceDriverError(f'Missing vpc_id in request_properties {request_properties} for resource_id {resource_id} resource_name {rn} for operation addtgwroute')
                 vpc_id = vpc_id.replace("-", "")
-                transit_gateway_attachment_id_prop = f'{vpc_id}TGWATTACHID'
-                transit_gateway_attachment_id = resource_properties.get(transit_gateway_attachment_id_prop, None)
-                if transit_gateway_attachment_id is None:
-                    raise ResourceDriverError(f'Cannot find {transit_gateway_attachment_id_prop} in resource_properties {resource_properties} for resource_id {resource_id} resource_name {rn} for operation addtgwroute')
+               # transit_gateway_attachment_id_prop = f'{vpc_id}TGWATTACHID'
+               # transit_gateway_attachment_id = resource_properties.get('tgw_vpc_attach_id', None)
+               # if transit_gateway_attachment_id is None:
+               #     raise ResourceDriverError(f'Cannot find {transit_gateway_attachment_id} in resource_properties {resource_properties} for resource_id {resource_id} resource_name {rn} for operation addtgwroute')
                 # and add it to the request_properties (not the resource_properties, because it will be overwritten and it doesn't apply to the CPA)
-                request_properties["transit_gateway_attachment_id"] = transit_gateway_attachment_id
+              #  request_properties["transit_gateway_attachment_id"] = transit_gateway_attachment_id
 
                 cf_template = self.render_template(system_properties, resource_properties, request_properties, 'cloudformation_tgw_addtgwroute.yaml')
                 cf_parameters = self.get_cf_parameters(resource_properties, system_properties, aws_location, cf_template)

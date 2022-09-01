@@ -12,6 +12,7 @@ from awsdriver.service.common import DELETE_REQUEST_PREFIX, REQUEST_ID_SEPARATOR
 from awsdriver.location import *
 from awsdriver.model.exceptions import *
 from awsdriver.service.cloudformation import *
+from awsdriver.service.tgw_vpc_attach_cf import TGWVPCAttachCloudFormation
 from .vpc_cf import *
 from .subnet_cf import *
 from .tgw_cf import *
@@ -66,6 +67,7 @@ class ResourceDriverHandler(Service, ResourceDriverHandlerCapability):
             'resource::AWSTransitGateway::1.0': TGWCloudFormation(),
             'resource::AWSInternetGateway::1.0': IGWCloudFormation(),
             'resource::AWSTransitGatewayPeerAttachment::1.0': TGWPACloudFormation(),
+            'resource::AWSTGWVPCAttachment': TGWVPCAttachCloudFormation()
         }
 
     def execute_lifecycle(self, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, deployment_location):
@@ -189,6 +191,8 @@ class ResourceDriverHandler(Service, ResourceDriverHandlerCapability):
             key = 'transit_route_table_id'
         elif key == 'TGWPAID':
             key = 'tgw_peer_attachment_id'
+        elif key == 'TGWVPCATTACHID':
+            key = 'tgw_vpc_attach_id'
         return key
 
     def __translate_outputs_to_values_dict(self, stack_outputs):

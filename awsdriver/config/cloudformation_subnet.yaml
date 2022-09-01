@@ -24,6 +24,8 @@ Resources:
           Value: {{ subnet_name }}
         - Key: Creator
           Value: cp4na
+        - Key: Primary
+          Value: {{ primary }}
         
 
 Outputs:

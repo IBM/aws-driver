@@ -8,7 +8,9 @@ Resources:
     Type: AWS::EC2::TransitGatewayVpcAttachment
     Properties:
       SubnetIds:
+        {% for subnet_id in subnet_id_list %}
         - {{ subnet_id }}
+        {% endfor %}
       TransitGatewayId: {{ transit_gateway_id }}
       VpcId: {{ vpc_id }}
   TransitGatewayAttachmentAssociation:

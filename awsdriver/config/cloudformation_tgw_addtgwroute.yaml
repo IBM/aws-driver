@@ -9,7 +9,7 @@ Resources:
     Properties:
       Blackhole: false
       DestinationCidrBlock: {{ cidr_block }}
-      TransitGatewayAttachmentId: {{request_properties.transit_gateway_attachment_id}}
+      TransitGatewayAttachmentId: {{tgw_vpc_attach_id}}
       TransitGatewayRouteTableId: {{transit_route_table_id}}
 
 Outputs:
