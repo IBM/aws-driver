@@ -28,6 +28,6 @@ Resources:
       TransitGatewayRouteTableId: {{transit_route_table_id}}
   {% endif %}
 Outputs:
-  {{ vpc_id | replace("-","") + "TGWATTACHID"}}:
+  TGWVPCATTACHID:
     Description: A reference to the created Transit Gateway Attachment
     Value: !Ref TransitGatewayAttachment

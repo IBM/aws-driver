@@ -1,6 +1,6 @@
 import logging
 from awsdriver.service.cloudformation import CloudFormation
-from awsdriver.service.common import CREATE_REQUEST_PREFIX, build_request_id 
+from awsdriver.service.common import CREATE_REQUEST_PREFIX, build_request_id, FILTER_NAME_TAG_CREATOR, FILTER_VALUE_TAG_CREATOR, FILTER_NAME_TAG_PRIMARY
 from awsdriver.service.topology import AWSAssociatedTopology
 from ignition.model.lifecycle import LifecycleExecuteResponse
 from ignition.service.resourcedriver import ResourceDriverError
@@ -17,10 +17,37 @@ class TGWVPCAttachCloudFormation(CloudFormation):
         cloudformation_driver = aws_location.cloudformation_driver
         vpc_id = resource_properties.get('vpc_id', None)
         isPrimary = resource_properties.get('primary', None)
-        subnets = cloudformation_driver.get_subnets_with_primary_tag(vpc_id, str(isPrimary))
-        for subnet in subnets:
+        subnets =  aws_location.ec2.describe_subnets(
+               Filters=[
+                   {
+                       'Name': FILTER_NAME_TAG_CREATOR,
+                       'Values': [
+                           FILTER_VALUE_TAG_CREATOR,
+                       ]
+                   },
+                   {
+                       'Name': 'vpc-id',
+                           'Values': [
+                               vpc_id,
+                       ]
+                   },
+                   {
+                       'Name': FILTER_NAME_TAG_PRIMARY,
+                           'Values': [
+                               isPrimary.lower(),
+                       ]
+                   }
+               ]
+           )
+        logger.info(f'Primary subnet list are {subnets}')
+
+        for subnet in subnets['Subnets']:
+            logger.info(f'Primary subnet list are {subnet}')
+
+        for subnet in subnets['Subnets']:
             subnet_id_list.append(subnet['SubnetId'])
-        logger.info('Primary Subnets Ids for vpc {vpc_id} are {subnet_id_list}')
+
+        logger.info(f'Primary Subnets Ids for vpc {vpc_id} are {subnet_id_list}')
         resource_properties = super().add_resource_property(resource_properties, 'subnet_id_list', 'list', subnet_id_list)
         
         resource_name = self.__create_tgwvpcattachment_resource_name(system_properties, resource_properties,  self.get_resource_name(system_properties))

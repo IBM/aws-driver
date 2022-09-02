@@ -25,7 +25,7 @@ Resources:
         - Key: Creator
           Value: cp4na
         - Key: Primary
-          Value: {{ primary }}
+          Value: {{ primary | lower}}
         
 
 Outputs:

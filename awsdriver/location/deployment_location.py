@@ -170,35 +170,7 @@ class CloudFormationDriver():
     
     def resume_api_calls(self):
         self.paused_at = None
-        
-    def get_subnets_with_primary_tag(self, vpc_id, isPrimary):
-        return self.client.describe_subnets(
-            Filters=[
-                {
-                    'Name': FILTER_NAME_TAG_CREATOR,
-                    'Values': [
-                        FILTER_VALUE_TAG_CREATOR,
-                    ]
-                },
-                {
-                    'Name': 'vpc-id',
-                        'Values': [
-                            vpc_id,
-                    ]
-                },
-                {
-                    'Name': FILTER_NAME_TAG_PRIMARY,
-                        'Values': [
-                            isPrimary,
-                    ]
-                }
-            ],
-         #   SubnetIds=[
-         #       'string',
-         #   ]
-        )
-        
-
+    
     def get_stack(self, stack_id_or_name):
         try:
             if self.api_calls_paused():

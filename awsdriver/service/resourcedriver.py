@@ -67,7 +67,7 @@ class ResourceDriverHandler(Service, ResourceDriverHandlerCapability):
             'resource::AWSTransitGateway::1.0': TGWCloudFormation(),
             'resource::AWSInternetGateway::1.0': IGWCloudFormation(),
             'resource::AWSTransitGatewayPeerAttachment::1.0': TGWPACloudFormation(),
-            'resource::AWSTGWVPCAttachment': TGWVPCAttachCloudFormation()
+            'resource::AWSTGWVPCAttachment::1.0': TGWVPCAttachCloudFormation()
         }
 
     def execute_lifecycle(self, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, deployment_location):
@@ -250,5 +250,4 @@ class ResourceDriverHandler(Service, ResourceDriverHandlerCapability):
             ignition.service.resourcedriver.ResourceDriverError: there was an error handling this request
         """
         return reference_model.FindReferenceResponse()
-
 
