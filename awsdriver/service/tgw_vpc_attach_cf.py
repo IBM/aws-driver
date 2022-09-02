@@ -71,6 +71,7 @@ class TGWVPCAttachCloudFormation(CloudFormation):
         return LifecycleExecuteResponse(request_id, associated_topology=associated_topology)
     
     def remove(self, resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location):
+        self.__create_tgwvpcattachment_resource_name(system_properties, resource_properties,  self.get_resource_name(system_properties))
         return super().remove(resource_id, lifecycle_name, driver_files, system_properties, resource_properties, request_properties, associated_topology, aws_location)
     
     def __create_tgwvpcattachment_resource_name(self, system_properties, resource_properties, resource_name):

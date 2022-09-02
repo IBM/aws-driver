@@ -4,8 +4,11 @@ Version: 0.0.1
 Summary: None
 Home-page: UNKNOWN
 License: UNKNOWN
-Description: # AWS Driver
-        
-        None
 Platform: UNKNOWN
 Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# AWS Driver
+
+None
+

@@ -28,7 +28,6 @@ awsdriver/config/cloudformation_tgw_addtgwroute.yaml
 awsdriver/config/cloudformation_tgw_createrta.yaml
 awsdriver/config/cloudformation_tgw_createtgwpeerattachment_template.yaml
 awsdriver/config/cloudformation_tgw_peerroute.yaml
-awsdriver/config/cloudformation_tgw_update_attach.yaml
 awsdriver/config/cloudformation_vpc.yaml
 awsdriver/config/default_config.yml
 awsdriver/location/__init__.py
@@ -45,5 +44,6 @@ awsdriver/service/route_table_cf.py
 awsdriver/service/subnet_cf.py
 awsdriver/service/tgw_cf.py
 awsdriver/service/tgw_peer_attach_cf.py
+awsdriver/service/tgw_vpc_attach_cf.py
 awsdriver/service/topology.py
 awsdriver/service/vpc_cf.py
