@@ -1,4 +1,0 @@
-
-        [console_scripts]
-        awsdriver-dev=awsdriver.__main__:main
-    

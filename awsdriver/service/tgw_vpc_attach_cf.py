@@ -17,7 +17,7 @@ class TGWVPCAttachCloudFormation(CloudFormation):
         cloudformation_driver = aws_location.cloudformation_driver
         vpc_id = resource_properties.get('vpc_id', None)
         isPrimary = resource_properties.get('primary', None)
-        subnets =  aws_location.ec2.describe_subnets(
+        subnets_res =  aws_location.ec2.describe_subnets(
                Filters=[
                    {
                        'Name': FILTER_NAME_TAG_CREATOR,
@@ -41,13 +41,11 @@ class TGWVPCAttachCloudFormation(CloudFormation):
            )
         logger.info(f'Primary subnet list are {subnets}')
 
-        for subnet in subnets['Subnets']:
-            logger.info(f'Primary subnet list are {subnet}')
-
-        for subnet in subnets['Subnets']:
+        # reparing subnet ids list from subnets
+        for subnet in subnets_res['Subnets']:
             subnet_id_list.append(subnet['SubnetId'])
 
-        logger.info(f'Primary Subnets Ids for vpc {vpc_id} are {subnet_id_list}')
+        logger.debug(f'Primary Subnets Ids for vpc {vpc_id} are {subnet_id_list}')
         resource_properties = super().add_resource_property(resource_properties, 'subnet_id_list', 'list', subnet_id_list)
         
         resource_name = self.__create_tgwvpcattachment_resource_name(system_properties, resource_properties,  self.get_resource_name(system_properties))
