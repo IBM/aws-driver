@@ -129,3 +129,8 @@ class CloudFormation():
         #add topology to remove the stack during uninstall from internal table
         associated_topology.remove_stack_id(resource_name)
         return LifecycleExecuteResponse(request_id, associated_topology)
+
+    def add_resource_property(self, resource_properties, key, type, value):
+        resource_property_dict = resource_properties.to_dict()
+        resource_property_dict[key] = {'type': type, 'value': value}
+        return PropValueMap(resource_property_dict)
