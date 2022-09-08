@@ -39,7 +39,7 @@ class TGWVPCAttachCloudFormation(CloudFormation):
                    }
                ]
            )
-        logger.info(f'Primary subnet list are {subnets}')
+        logger.info(f'Primary subnet list are {subnets_res}')
 
         # reparing subnet ids list from subnets
         for subnet in subnets_res['Subnets']:
