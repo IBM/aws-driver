@@ -126,5 +126,11 @@ class CloudFormation():
             # nothing to do
             logger.info(f'No stack_id in associated topology for resource with id: {resource_id} name: {resource_name} lifecycle_name: {lifecycle_name}')
             request_id = build_request_id(CREATE_REQUEST_PREFIX, 'SKIP')
+        #add topology to remove the stack during uninstall from internal table
+        associated_topology.remove_stack_id(resource_name)
+        return LifecycleExecuteResponse(request_id, associated_topology)
 
-        return LifecycleExecuteResponse(request_id)
+    def add_resource_property(self, resource_properties, key, type, value):
+        resource_property_dict = resource_properties.to_dict()
+        resource_property_dict[key] = {'type': type, 'value': value}
+        return PropValueMap(resource_property_dict)

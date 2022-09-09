@@ -22,7 +22,8 @@ setup(
         'uwsgi>=2.0.18,<3.0',
         'gunicorn>=19.9.0,<20.0',
         'boto3==1.22.3',
-        'cfn-flip==1.2.3'
+        'cfn-flip==1.2.3',
+        'openapi-spec-validator==0.4.0'
     ],
     entry_points='''
         [console_scripts]
