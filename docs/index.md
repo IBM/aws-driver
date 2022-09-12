@@ -54,14 +54,22 @@ The following table lists configurable parameters of the chart:
 | app.config.env.NUM_PROCESSES | Number of processes started by the WSGI container | 4 |
 | app.config.env.NUM_THREADS | Number of threads per process | 2 |
 | app.config.override | Map to set [Application Configuration)[#app-configuration] properties | See connection_address below and [Application Configuration)[#app-configuration] properties |
-| app.config.override.message.connection_address | Kafka address. Default set to address of Kafka installed as standard with LM | foundation-kafka:9092 |
+| app.config.override.message.connection_address | Kafka address. Default set to address of Kafka installed as standard with LM | cp4na-o-events-kafka-bootstrap:9092 |
 | app.affinity | Affinity settings | A pod anti-affinity rule is configured to inform Kubernetes it is preferable to deploy the pods on different Nodes |
 | app.tolerations | Tolerations for node taints | [] |
-| app.resources | Set requests and limits to CPU and memory resources | {} |
+| app.resources | Set requests and limits to CPU and memory resources | 
+  ```
+  resources: 
+    limits:
+      cpu: 2
+      memory: 2Gi
+    requests:
+      cpu: 2
+      memory: 1Gi ```
+      |
 | service.type | Type of Service to be deployed | NodePort |
 | service.nodePort | NodePort used to expose the service | 30259 |
-| ingress.enabled | Flag to disable/enable creation of an Ingress rule for external access | true |
-| ingress.host | Hostname on the Ingress rule | aws-driver.lm |
+| route.enabled | Flag to disable/enable creation of an route rule for external access | true |
 
 ## Application Configuration
 
@@ -70,4 +78,4 @@ The following table lists configurable parameters of the Application, that may b
 | Parameter | Description | Default |
 | --- | --- | --- |
 | application.port | Port the application runs on (internal access only) | 7276 | 
-| messaging.connection_address | Kafka address | kafka:9092 |
+| messaging.connection_address | Kafka address | cp4na-o-events-kafka-bootstrap:9092 |

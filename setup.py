@@ -18,7 +18,7 @@ setup(
     install_requires=[
         'werkzeug==0.14',
         'itsdangerous==2.0.1',
-        'ignition-framework==3.0.1',
+        'ignition-framework=={0}'.format(_pkg_info['ignition-version']),
         'uwsgi>=2.0.18,<3.0',
         'gunicorn>=19.9.0,<20.0',
         'boto3==1.22.3',

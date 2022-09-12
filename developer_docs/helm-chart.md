@@ -3,8 +3,7 @@
 The Helm chart for this driver includes the following features:
 
 - A Deployment to create pods for your driver application
-- A Service to expose your application internally and externally (with a NodePort)
-- Ingress rule to expose your application externally with Ingress (Ingress controller required on Kubernetes cluster. By default, LM installs an Ingress controller for you)
+- A Service to expose your application internally and externally (with a NodePort/Route)
 - Configurable options for:
     - Location and version of Docker image
     - Number of replicas of the driver
@@ -14,7 +13,7 @@ The Helm chart for this driver includes the following features:
     - Pod affinity/anti-affinity
     - Node affinity/anti/affinity
     - NodePort
-    - Ingress Host
+    - Resources
 - Necessary Deployment labels so logs from the driver may be viewed in the dashboard provided with LM (Kibana)
 
 # Build Helm Chart
@@ -94,10 +93,33 @@ In a custom **Helm values file** add the following:
 ```
 docker:
   image: <registry host and port>/aws-driver
-  version: 0.0.1
+  version: 1.0.0
   imagePullPolicy: IfNotPresent
 ```
 
 Include this values file on the Helm install command with the `-f` option.
 
 Note: if the Docker registry is insecure you need to inform the docker daemon (usually by adding it to a "insecure-registries" in `/etc/docker/daemon.json`).
+
+## Scalability
+
+   With Gunicorn support, aws-driver can handle huge traffic by configuring no of processes and threads.
+
+   There are two ways to scale the aws-driver to address  production grade traffic
+
+   ### 1. By increasing no of processes and threads
+
+      Configure with helm install command as below
+
+      ```
+         helm install aws-driver aws-driver-0.0.2.tgz --set docker.image=aws-driver--set docker.version=0.0.2 --set app.config.env.NUM_PROCESSES=<processes> --set --set app.config.env.NUM_THREADS=<threads> --set resources.requests.cpu=2*<processes>+1  --set resources.limits.cpu=2<processes>+1 -n <namespace>
+      ```
+      Note: Default no of processes are 9 and no of threads are 8 which are typically sufficient for production grade applications. Whenever you are increasing the no of processes, the cpu resources also should be increased accordingly as mentioned in the above command. There may be a need to increase the memory if required.
+
+   ### 2. By scaling out the pod instances
+     
+    The easiest way to handle huge traffic if the default values are not sufficient is to increase the pod replicas
+
+      ```
+        oc scale deploy aws-driver --replicas <required-pod-replicas>
+      ```
