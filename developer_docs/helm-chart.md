@@ -112,7 +112,7 @@ Note: if the Docker registry is insecure you need to inform the docker daemon (u
       Configure with helm install command as below
 
       ```
-         helm install aws-driver aws-driver-0.0.2.tgz --set docker.image=aws-driver--set docker.version=0.0.2 --set app.config.env.NUM_PROCESSES=<processes> --set --set app.config.env.NUM_THREADS=<threads> --set resources.requests.cpu=2*<processes>+1  --set resources.limits.cpu=2<processes>+1 -n <namespace>
+         helm install aws-driver aws-driver-<version>.tgz --set docker.image=aws-driver--set docker.version=<version> --set app.config.env.NUM_PROCESSES=<processes> --set --set app.config.env.NUM_THREADS=<threads> --set resources.requests.cpu=2*<processes>+1  --set resources.limits.cpu=2*<processes>+1 -n <namespace>
       ```
       Note: Default no of processes are 9 and no of threads are 8 which are typically sufficient for production grade applications. Whenever you are increasing the no of processes, the cpu resources also should be increased accordingly as mentioned in the above command. There may be a need to increase the memory if required.
 
