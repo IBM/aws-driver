@@ -1,6 +1,6 @@
 # AWS Driver
 
-None
+Lifecycle driver implementation that uses AWS cloud formation templates to execute operations.
 
 # Replace Content
 
@@ -26,7 +26,8 @@ Add configuration to this file (check [Helm Configuration](#helm-configuration) 
 app:
   config:
     override:
-      connection_address: foundation-kafka:9092
+      messaging:
+        connection_address: cp4na-o-events-kafka-bootstrap:9092
 ```
 
 Reference the values file on install to apply configuration:
@@ -93,13 +94,13 @@ The following table lists configurable parameters of the Application, that may b
 
      
      ```
-        lmctl resourcedriver delete --type aws default
+        lmctl resourcedriver delete --type aws <lmctl-env-name>
      ```
 
   ### 4. Add AWS driver to resource manager
 
      ```
-        lmctl resourcedriver add --type aws --url https://aws-driver:7276 --certificate aws-driver-tls.pem default
+        lmctl resourcedriver add --type aws --url https://aws-driver:7276 --certificate aws-driver-tls.pem <lmctl-env-name>
      ```
 
     With this, resource manager will know there is a driver of type 'aws' and how it can reach the reach the driver.
