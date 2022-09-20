@@ -124,22 +124,22 @@ Note: if the Docker registry is insecure you need to inform the docker daemon (u
         oc scale deploy aws-driver --replicas <required-pod-replicas>
       ```
 
-## Configure driver to resource manager
+# Configure driver to resource manager
 
-  ### 1. Configure lmctl
+  ## 1. Configure lmctl
      
     Please refer the document to configure lmctl
 
     [LMCTL](https://pages.github.ibm.com/tnc/tnc.github.io/technical/development-environment/openshift-development-environment#lmctl)
 
 
-  ### 2. Get the cert file from secret
+  ## 2. Get the cert file from secret
 
      ```
         oc get secret aws-driver-tls -o jsonpath="{.data['tls\.crt']}" | base64 -d > aws-driver-tls.pem
      ```
 
-  ### 3. Delete if the driver already exists.
+  ## 3. Delete if the driver already exists.
        
       This step is optional. User can apply this if driver is already onboarded
 
@@ -148,7 +148,7 @@ Note: if the Docker registry is insecure you need to inform the docker daemon (u
         lmctl resourcedriver delete --type aws <lmctl-env-name>
      ```
 
-  ### 4. Add AWS driver to resource manager
+  ## 4. Add AWS driver to resource manager
 
      ```
         lmctl resourcedriver add --type aws --url https://aws-driver:7276 --certificate aws-driver-tls.pem <lmctl-env-name>

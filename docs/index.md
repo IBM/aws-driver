@@ -36,8 +36,6 @@ Reference the values file on install to apply configuration:
 helm install --name aws-driver aws-driver-0.0.1.tgz -f custom_values.yaml-
 ```
 
-Once the pod for the driver has started you will be able to access the Swagger UI at: `http://<kubernetes-node-ip>:30259/api/driver/ui`
-
 ## Helm Configuration
 
 The following table lists configurable parameters of the chart:
@@ -77,20 +75,20 @@ The following table lists configurable parameters of the Application, that may b
 
   ### 1. Configure lmctl
      
-    Please refer the document to configure lmctl
+  Please refer the document to configure lmctl
 
-    [LMCTL](https://pages.github.ibm.com/tnc/tnc.github.io/technical/development-environment/openshift-development-environment#lmctl)
+  [LMCTL]https://pages.github.ibm.com/tnc/tnc.github.io/technical/development-environment/openshift-development-environment#lmctl)
 
 
   ### 2. Get the cert file from secret
 
-     ```
-        oc get secret aws-driver-tls -o jsonpath="{.data['tls\.crt']}" | base64 -d > aws-driver-tls.pem
-     ```
+     
+    oc get secret aws-driver-tls -o jsonpath="{.data['tls\.crt']}" | base64 -d > aws-driver-tls.pem
+    
 
   ### 3. Delete if the driver already exists.
        
-      This step is optional. User can apply this if driver is already onboarded
+  This step is optional. User can apply this if driver is already onboarded
 
      
      ```
@@ -99,8 +97,8 @@ The following table lists configurable parameters of the Application, that may b
 
   ### 4. Add AWS driver to resource manager
 
-     ```
-        lmctl resourcedriver add --type aws --url https://aws-driver:7276 --certificate aws-driver-tls.pem <lmctl-env-name>
-     ```
 
-    With this, resource manager will know there is a driver of type 'aws' and how it can reach the reach the driver.
+    lmctl resourcedriver add --type aws --url https://aws-driver:7276 --certificate aws-driver-tls.pem <lmctl-env-name>
+    
+
+  With this, resource manager will know there is a driver of type 'aws' and how it can reach the reach the driver.
