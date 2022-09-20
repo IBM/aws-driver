@@ -32,10 +32,10 @@ The command will print the location of the generated `.tgz` Helm package.
 
 To deploy the Helm chart will need Helm installed and initialised against a Kubernetes cluster (e.g. `helm init` on your Kubernetes cluster master node).
 
-Install the chart with the default configuration using the install command:
+Install the chart with the default configuration using the install command and in the namespace where siteplanner installed:
 
 ```
-helm install --name aws-driver <path to chart>
+helm install --name aws-driver <path to chart> -n <namespace>
 ```
 
 Configuration for the Helm deployment can be provided with a **Helm values file** on the `-f` option. 
@@ -120,9 +120,9 @@ Note: if the Docker registry is insecure you need to inform the docker daemon (u
      
     The easiest way to handle huge traffic if the default values are not sufficient is to increase the pod replicas
 
-      ```
-        oc scale deploy aws-driver --replicas <required-pod-replicas>
-      ```
+  ```
+    oc scale deploy aws-driver --replicas <required-pod-replicas> -n <namespace>
+  ```
 
 # Configure driver to resource manager
 
@@ -136,7 +136,7 @@ Note: if the Docker registry is insecure you need to inform the docker daemon (u
   ## 2. Get the cert file from secret
 
      ```
-        oc get secret aws-driver-tls -o jsonpath="{.data['tls\.crt']}" | base64 -d > aws-driver-tls.pem
+        oc get secret aws-driver-tls -o jsonpath="{.data['tls\.crt']}" | base64 -d > aws-driver-tls.pem -n <namespace>
      ```
 
   ## 3. Delete if the driver already exists.

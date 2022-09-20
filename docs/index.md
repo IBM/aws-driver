@@ -8,10 +8,10 @@ Replace the content of this file with a user guide for your application
 
 # Install
 
-Install AWS Driver using Helm:
+Install AWS Driver using Helm in the namespace where siteplanner installed:
 
 ```
-helm install --name aws-driver aws-driver-0.0.1.tgz
+helm install --name aws-driver aws-driver-0.0.1.tgz -n <namespace>
 ```
 
 Add configuration through a custom Helm values file:
@@ -33,7 +33,7 @@ app:
 Reference the values file on install to apply configuration:
 
 ```
-helm install --name aws-driver aws-driver-0.0.1.tgz -f custom_values.yaml-
+helm install --name aws-driver aws-driver-0.0.1.tgz -n <namespace> -f custom_values.yaml-
 ```
 
 ## Helm Configuration
@@ -83,7 +83,7 @@ The following table lists configurable parameters of the Application, that may b
   ### 2. Get the cert file from secret
 
      
-    oc get secret aws-driver-tls -o jsonpath="{.data['tls\.crt']}" | base64 -d > aws-driver-tls.pem
+    oc get secret aws-driver-tls -o jsonpath="{.data['tls\.crt']}" | base64 -d > aws-driver-tls.pem -n <namespace>
     
 
   ### 3. Delete if the driver already exists.
@@ -91,9 +91,8 @@ The following table lists configurable parameters of the Application, that may b
   This step is optional. User can apply this if driver is already onboarded
 
      
-     ```
-        lmctl resourcedriver delete --type aws <lmctl-env-name>
-     ```
+    lmctl resourcedriver delete --type aws <lmctl-env-name>
+
 
   ### 4. Add AWS driver to resource manager
 
