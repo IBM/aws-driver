@@ -1,6 +1,6 @@
 # AWS Driver
 
-None
+Lifecycle driver implementation that uses AWS cloud formation templates to execute operations.
 
 # Replace Content
 
@@ -8,10 +8,10 @@ Replace the content of this file with a user guide for your application
 
 # Install
 
-Install AWS Driver using Helm:
+Install AWS Driver using Helm in the namespace where siteplanner installed:
 
 ```
-helm install --name aws-driver aws-driver-0.0.1.tgz
+helm install --name aws-driver aws-driver-0.0.1.tgz -n <namespace>
 ```
 
 Add configuration through a custom Helm values file:
@@ -26,16 +26,15 @@ Add configuration to this file (check [Helm Configuration](#helm-configuration) 
 app:
   config:
     override:
-      connection_address: foundation-kafka:9092
+      messaging:
+        connection_address: cp4na-o-events-kafka-bootstrap:9092
 ```
 
 Reference the values file on install to apply configuration:
 
 ```
-helm install --name aws-driver aws-driver-0.0.1.tgz -f custom_values.yaml-
+helm install --name aws-driver aws-driver-0.0.1.tgz -n <namespace> -f custom_values.yaml-
 ```
-
-Once the pod for the driver has started you will be able to access the Swagger UI at: `http://<kubernetes-node-ip>:30259/api/driver/ui`
 
 ## Helm Configuration
 
@@ -57,16 +56,7 @@ The following table lists configurable parameters of the chart:
 | app.config.override.message.connection_address | Kafka address. Default set to address of Kafka installed as standard with LM | cp4na-o-events-kafka-bootstrap:9092 |
 | app.affinity | Affinity settings | A pod anti-affinity rule is configured to inform Kubernetes it is preferable to deploy the pods on different Nodes |
 | app.tolerations | Tolerations for node taints | [] |
-| app.resources | Set requests and limits to CPU and memory resources | 
-  ```
-  resources: 
-    limits:
-      cpu: 2
-      memory: 2Gi
-    requests:
-      cpu: 2
-      memory: 1Gi ```
-      |
+| app.resources | Set requests and limits to CPU and memory resources | resources.limits.cpu: 2 resources.limits.memory: 2Gi resources.requests.cp4: 2 resources.requests.memory: 1Gi |
 | service.type | Type of Service to be deployed | NodePort |
 | service.nodePort | NodePort used to expose the service | 30259 |
 | route.enabled | Flag to disable/enable creation of an route rule for external access | true |
@@ -79,3 +69,35 @@ The following table lists configurable parameters of the Application, that may b
 | --- | --- | --- |
 | application.port | Port the application runs on (internal access only) | 7276 | 
 | messaging.connection_address | Kafka address | cp4na-o-events-kafka-bootstrap:9092 |
+
+
+## Configure driver to resource manager
+
+  ### 1. Configure lmctl
+     
+  Please refer the document to configure lmctl
+
+  [LMCTL]https://pages.github.ibm.com/tnc/tnc.github.io/technical/development-environment/openshift-development-environment#lmctl)
+
+
+  ### 2. Get the cert file from secret
+
+     
+    oc get secret aws-driver-tls -o jsonpath="{.data['tls\.crt']}" | base64 -d > aws-driver-tls.pem -n <namespace>
+    
+
+  ### 3. Delete if the driver already exists.
+       
+  This step is optional. User can apply this if driver is already onboarded
+
+     
+    lmctl resourcedriver delete --type aws <lmctl-env-name>
+
+
+  ### 4. Add AWS driver to resource manager
+
+
+    lmctl resourcedriver add --type aws --url https://aws-driver:7276 --certificate aws-driver-tls.pem <lmctl-env-name>
+    
+
+  With this, resource manager will know there is a driver of type 'aws' and how it can reach the reach the driver.
